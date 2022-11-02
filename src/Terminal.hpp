@@ -23,6 +23,8 @@ public:
     void write_string(const char *str);
 
 private:
+    void advance_cursor();
+
     void write(const char *str, std::size_t length);
 
     /**
@@ -36,8 +38,8 @@ private:
     uint16_t *buffer = reinterpret_cast<uint16_t *>(0xb8000);
     std::size_t width = 80;
     std::size_t height = 25;
-    std::size_t row = 0;
-    std::size_t column = 0;
+    std::size_t cursor_row = 0;
+    std::size_t cursor_column = 0;
     VGAColor fg_color = VGAColor::white;
     VGAColor bg_color = VGAColor::black;
 };

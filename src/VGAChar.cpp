@@ -24,3 +24,8 @@ uint16_t VGAChar::to_uint16_t()
         | (blink_flag << 15);
     return result;
 }
+
+bool VGAChar::is_newline()
+{
+    return code_point == '\n';
+}

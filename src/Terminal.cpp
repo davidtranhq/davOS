@@ -24,29 +24,34 @@ void Terminal::clear()
 
 void Terminal::put_char(VGAChar vga_char)
 {
-    put_char_at(vga_char, row, column);
-    // advance the cursor
-    column += 1;
-    if (column == width)
-    {
-        column = 0;
-        row += 1;
-        if (row == height)
-        {
-            row = 0;
-        }
-    }
+    if (!vga_char.is_newline())
+        put_char_at(vga_char, cursor_row, cursor_column);
+    advance_cursor();
 }
 
 void Terminal::put_char_at(VGAChar vga_char, std::size_t row, std::size_t column)
 {
-    const std::size_t index {row * width + column};
+    const std::size_t index {cursor_row * width + cursor_column};
     buffer[index] = vga_char.to_uint16_t();
 }
 
 void Terminal::write_string(const char *str)
 {
     write(str, Terminal::strlen(str));
+}
+
+void Terminal::advance_cursor()
+{
+    cursor_column += 1;
+    if (cursor_column == width)
+    {
+        cursor_column = 0;
+        cursor_row += 1;
+        if (cursor_row == height)
+        {
+            cursor_row = 0;
+        }
+    }
 }
 
 void Terminal::write(const char *str, std::size_t length)

@@ -29,6 +29,8 @@ public:
      */
     uint16_t to_uint16_t();
 
+    bool is_newline();
+
 private:
     uint8_t code_point;
     VGAColor fg_color;

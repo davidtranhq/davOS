@@ -27,6 +27,8 @@ Run `make` in the root directory to build both the `davos.bin` binary and the bo
 
 The OS can be booted using any VM or physical machine capable of booting from CD-ROMs. For development, consider the [qemu](https://www.qemu.org/download/) VM.
 
+If using qemu, the OS can be booted from the ISO using `qemu-system-i386 -cdrom davos.iso`, or from the binary using `qemu-system-i386 -kernel davos.bin`.
+
 ### QEMU on WSL2
 
 Additional steps need to be taken to run qemu on WSL2 since it requires a GUI. https://skeptric.com/wsl2-xserver/ provides a step-by-step guide on setting up a Windows X Server for running WSl2 GUI applications using [VcXsrv](https://sourceforge.net/projects/vcxsrv/).
@@ -35,7 +37,7 @@ Additional steps need to be taken to run qemu on WSL2 since it requires a GUI. h
 ## Directory Structure
 
 * `build/` contains intermediate build files; generated after running `make`
-* `config/` contains configuration files for custom linking (`linker.ld`) and creating the bootable CD-ROM image (`grub.cfg`) and 
+* `config/` contains configuration files for custom linking (`linker.ld`) and creating the bootable CD-ROM image (`grub.cfg`) 
 * `cxxshim/` is a Git submodule pointing to a 3rd party [freestanding implementation of the C++ standard library](https://en.cppreference.com/w/cpp/freestanding)
 * `iso/` contains intermediate files used to generate the final `.iso` bootable CD-ROM image
 * `scripts/` contain test scripts that are run during the build process to ensure correct compilation and linking
