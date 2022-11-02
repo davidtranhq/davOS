@@ -1,0 +1,3 @@
+[submodule "cxxshim"]
+	path = cxxshim
+	url = https://github.com/managarm/cxxshim.git
