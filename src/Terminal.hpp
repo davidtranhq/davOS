@@ -24,6 +24,10 @@ public:
 
 private:
     void advance_cursor();
+    void advance_cursor_column();
+    void advance_cursor_row();
+
+    void scroll_up();
 
     void write(const char *str, std::size_t length);
 

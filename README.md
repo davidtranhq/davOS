@@ -8,7 +8,6 @@ Currently, it is just a minimal kernel for 32-bit x86 that outputs text using th
 
 ## Build
 
-
 ### Building a GCC cross-compiler
 
 A GCC cross-compiler needs to be built targetting i686-elf. The [OSDev wiki](https://wiki.osdev.org/GCC_Cross-Compiler) gives an in-depth tutorial. The GCC and binutils versions used for building the cross-compiler for this project were 11.3.0 and 2.38, respecitvely.
@@ -36,12 +35,12 @@ Additional steps need to be taken to run qemu on WSL2 since it requires a GUI. h
 
 ## Directory Structure
 
-* `build/` contains intermediate build files; generated after running `make`
-* `config/` contains configuration files for custom linking (`linker.ld`) and creating the bootable CD-ROM image (`grub.cfg`) 
-* `cxxshim/` is a Git submodule pointing to a 3rd party [freestanding implementation of the C++ standard library](https://en.cppreference.com/w/cpp/freestanding)
-* `iso/` contains intermediate files used to generate the final `.iso` bootable CD-ROM image
-* `scripts/` contain test scripts that are run during the build process to ensure correct compilation and linking
-* `src/` contains the source C++ and assembly files
+* `build/` contains intermediate build files; generated after running `make`.
+* `config/` contains configuration files for custom linking (`linker.ld`) and creating the bootable CD-ROM image (`grub.cfg`).
+* `cxxshim/` is a Git submodule pointing to a 3rd party [freestanding implementation of the C++ standard library](https://en.cppreference.com/w/cpp/freestanding).
+* `iso/` contains intermediate files used to generate the final `.iso` bootable CD-ROM image.
+* `scripts/` contain test scripts that are run during the build process to ensure correct compilation and linking.
+* `src/` contains the source C++ and assembly files.
 
 
 

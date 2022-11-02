@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <cstddef>
 
@@ -24,9 +25,15 @@ void Terminal::clear()
 
 void Terminal::put_char(VGAChar vga_char)
 {
-    if (!vga_char.is_newline())
+    if (vga_char.is_newline())
+    {
+        advance_cursor_row();
+    }
+    else
+    {
         put_char_at(vga_char, cursor_row, cursor_column);
-    advance_cursor();
+        advance_cursor();
+    }
 }
 
 void Terminal::put_char_at(VGAChar vga_char, std::size_t row, std::size_t column)
@@ -42,15 +49,39 @@ void Terminal::write_string(const char *str)
 
 void Terminal::advance_cursor()
 {
+    advance_cursor_column();
+}
+
+void Terminal::advance_cursor_column()
+{
     cursor_column += 1;
     if (cursor_column == width)
     {
-        cursor_column = 0;
-        cursor_row += 1;
-        if (cursor_row == height)
-        {
-            cursor_row = 0;
-        }
+        advance_cursor_row();
+    }
+}
+
+void Terminal::advance_cursor_row()
+{
+    cursor_column = 0;
+    cursor_row += 1;
+    if (cursor_row == height)
+    {
+        scroll_up();
+        cursor_row -= 1;
+    }
+}
+
+void Terminal::scroll_up()
+{
+    for (std::size_t row = 0; row <= cursor_row; ++row)
+    {
+        uint16_t *row_begin = buffer + row * width;
+        uint16_t *next_row_begin = buffer + (row + 1) * width;
+        uint16_t *next_row_end = buffer + (row + 2) * width - 1; 
+        // copy the next row of text to this row
+        // (moves each row of text up one) 
+        std::copy(next_row_begin, next_row_end, row_begin);
     }
 }
 
