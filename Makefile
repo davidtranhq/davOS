@@ -28,7 +28,13 @@ INCLUDE = cxxshim/stage2/include
 LIBRARY = -lgcc
 LINKER =
 
-all : $(BIN) check-multiboot iso
+all : iso check-multiboot
+
+iso : $(BIN)
+	mkdir -p $(ISO_DIR)/boot/grub
+	cp $(BIN) $(ISO_DIR)/boot/$(BIN)
+	cp $(CONFIG)/grub.cfg $(ISO_DIR)/boot/grub/grub.cfg
+	grub-mkrescue -o $(ISO) $(ISO_DIR)
 
 $(BIN) : $(OBJ) $(BUILD_DIR)/boot.o
 	$(CXX) -T $(CONFIG)/linker.ld $(CXX_FLAGS) $^ $(LIBRARY) $(LINKER) -o $@
@@ -49,12 +55,6 @@ $(BUILD_DIR)/%.o : src/%.cpp
 # The -MMD flags additionaly creates a .d file with
 # the same name as the .o file.
 	$(CXX) $(CXX_FLAGS) -I$(INCLUDE) -MMD -c $< -o $@
-
-iso :
-	mkdir -p $(ISO_DIR)/boot/grub
-	cp $(BIN) $(ISO_DIR)/boot/$(BIN)
-	cp $(CONFIG)/grub.cfg $(ISO_DIR)/boot/grub/grub.cfg
-	grub-mkrescue -o $(ISO) $(ISO_DIR)
 
 .PHONY : clean check-multiboot
 
