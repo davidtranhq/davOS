@@ -19,13 +19,6 @@ stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
 
-# Canary value for stack-smashing protection.
-# TODO: Generate this value randomly on boot
-.section .data
-.global __stack_chk_guard
-__stack_chk_guard:
-.long 0x12345678
-
 # The kernel entry point.
 .section .text
 .global _start
