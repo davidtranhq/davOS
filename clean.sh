@@ -2,8 +2,11 @@
 set -e
 . ./config.sh
 
+PROJECTS="kernel"
+
+# clean recurisvely
 for PROJECT in $PROJECTS; do
-  (cd $PROJECT && $MAKE clean)
+  (cd $PROJECT && ./clean-rec.sh)
 done
 
 rm -rf sysroot

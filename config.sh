@@ -1,6 +1,3 @@
-SYSTEM_HEADER_PROJECTS="libc kernel"
-PROJECTS="libc kernel"
-
 export MAKE=${MAKE:-make}
 export HOST=${HOST:-$(./default-host.sh)}
 

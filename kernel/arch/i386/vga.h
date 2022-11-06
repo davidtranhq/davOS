@@ -1,5 +1,5 @@
-#ifndef ARCH_I386_VGA_H
-#define ARCH_I386_VGA_H
+#ifndef DAVOS_ARCH_I386_VGA_H_INCLUDED
+#define DAVOS_ARCH_I386_VGA_H_INCLUDED
 
 #include <stdint.h>
 

@@ -1,23 +1,19 @@
 #include <stdio.h>
+#include <string.h>
 
-extern "C"
+#include <kernel/panic.h>
+#include <kernel/terminal.h>
+
+__attribute__((__noinline__))
+void stack_smash_test()
 {
-#include <kernel/tty.h>
-
-void kernel_main(void);
+	char arr[10];
+	memset(arr, 0xa9, 12);
 }
 
-struct GlobalConstructorTest
-{
-	GlobalConstructorTest() : c {'X'} {}
-	char c;
-};
-
-GlobalConstructorTest g;
-
-void kernel_main(void) {
-	terminal_initialize();
-	printf("Hello, kernel!\n");
-
-	printf("%c", g.c);
+extern "C" void kernel_main(void) {
+	terminal_init();
+	// if the stack is smashed, stack_smash_test() should invoke a panic and not return
+	stack_smash_test();
+	printf("The stack is safe.\n");
 }
