@@ -10,6 +10,11 @@ A GCC cross-compiler targetting x86_64-elf needs to be built. Follow [these inst
 
 ### Building the OS
 
+NOTE: Because this repostiory contains git submodules, it should be cloned with 
+```bash
+git clone --recurse-submodules git@github.com:davidtranhq/davOS.git
+```
+
 Run `make` to build the kernel `davos.elf`.
 
 Run `make iso` to build the kernel and a bootable CD-ROM `davos.iso`.
