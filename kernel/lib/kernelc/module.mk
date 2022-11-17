@@ -1,9 +1,6 @@
 DIR := kernel/lib/kernelc
 SUBMODULES :=
-
-INCLUDE_DIRS += $(DIR)/include
-LIBS += -lkernelc
-LIB_DIRS += $(DIR)
+BIN_$(DIR) := kernelc
 
 OBJS_$(DIR) := $(addprefix $(DIR)/, \
 	stdio/printf.o \
@@ -18,12 +15,18 @@ OBJS_$(DIR) := $(addprefix $(DIR)/, \
 	builtin/__stack_chk_fail.o \
 )
 
-CLEAN += $(OBJS_$(DIR)) $(OBJS_$(DIR):.o=.d)
+BIN_PATH_$(DIR) := $(DIR)/lib$(BIN_$(DIR)).a
+
+INCLUDE_DIRS += $(DIR)/include
+LIBS += $(BIN_PATH_$(DIR))
+LIB_DIRS += $(DIR)
+CLEAN += $(BIN_PATH_$(DIR)) $(OBJS_$(DIR)) $(OBJS_$(DIR):.o=.d)
 
 # the implementation of the stack protector must itself not use the stack protector
 # (prevent infinite loop)
 $(DIR)/builtin/__stack_chk_fail.o: CXXFLAGS += -fno-stack-protector
 
-$(DIR)/libkernelc.a: $(OBJS_$(DIR))
+# dependencies for building the library binary
+$(BIN_PATH_$(DIR)): $(OBJS_$(DIR))
 
 include $(patsubst %, %/module.mk, $(SUBMODULES))

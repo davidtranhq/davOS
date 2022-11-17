@@ -1,7 +1,5 @@
 #include <stdio.h>
 
-#include <kernel/panic.h>
-
 extern "C"
 [[ noreturn ]]
 void abort(void)

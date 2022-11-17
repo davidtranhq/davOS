@@ -18,6 +18,7 @@ OBJS :=
 LIBS :=
 INCLUDE_DIRS :=
 LIB_DIRS :=
+LIB_NAMES :=
 CLEAN :=
 include $(patsubst %, %/module.mk, $(MODULES))
 
@@ -44,6 +45,7 @@ CXXFLAGS += \
 	-MP \
 
 LDFLAGS += $(addprefix -L, $(LIB_DIRS))
+LDFLAGS += $(addprefix -l, $(LIB_NAMES))
 LDFLAGS += \
 	-nostdlib \
 	-static \
@@ -61,8 +63,8 @@ include phony.mk
 
 all: $(BIN)
 
-$(BIN): $(OBJS)
-	$(LD) $^ $(LDFLAGS) $(LIBS) -o $@
+$(BIN): $(OBJS) $(LIBS)
+	$(LD) $^ $(LDFLAGS) -o $@
 
 %.o: %.cpp
 	$(CXX) -c $< $(CXXFLAGS) $(CPPFLAGS) -o $@
