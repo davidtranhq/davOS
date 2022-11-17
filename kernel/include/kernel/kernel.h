@@ -6,6 +6,11 @@
 BEGIN_CDECLS
 
 /**
+ * @brief Initialize kernel services such as the terminal, IDT, etc.
+ */
+void kernel_init();
+
+/**
  * @brief Induce a kernel panic, printing an error message to the terminal.
  * 
  * @param fmt A format-specifier for the string

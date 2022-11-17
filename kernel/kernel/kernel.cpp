@@ -2,8 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <kernel/idt.h>
 #include <kernel/kernel.h>
 #include <kernel/terminal.h>
+
+void kernel_init()
+{
+    terminal_init();
+    idt_init();
+}
 
 [[ noreturn ]]
 void kernel_panic(const char *fmt, ...)
