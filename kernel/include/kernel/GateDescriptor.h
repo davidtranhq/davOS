@@ -24,11 +24,11 @@ public:
         uint8_t interrupt_stack_table_offset,
         GateType gate_type,
         PrivilegeLevel required_privilege
-    ) : interrupt_service_routine_address{interrupt_service_routine_address},
-        selector{selector},
-        interrupt_stack_table_offset{interrupt_stack_table_offset},
-        gate_type{gate_type},
-        required_privilege{required_privilege}
+    ) : interrupt_service_routine_address {interrupt_service_routine_address},
+        selector {selector},
+        interrupt_stack_table_offset {interrupt_stack_table_offset},
+        gate_type {gate_type},
+        required_privilege {required_privilege}
     {}
 
     /**
