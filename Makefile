@@ -13,7 +13,7 @@ ARCH_DIR = x86-64
 # modules (sub-projects) contained in this project
 MODULES = kernel
 
-CXXFLAGS = -Wall -Werror
+CXXFLAGS = -Wall -Werror -Wpedantic -g
 
 ########## NON-CONFIGURABLE STUFF BELOW ##########
 
@@ -29,7 +29,7 @@ include $(patsubst %, %/module.mk, $(MODULES))
 CPPFLAGS += $(addprefix -I, $(INCLUDE_DIRS))
 
 CXXFLAGS += \
-	-std=c++17 \
+	-std=c++20 \
 	-ffreestanding \
 	-fstack-protector \
 	-fno-stack-check \
