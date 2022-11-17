@@ -2,3 +2,9 @@
 	path = limine
 	url = https://github.com/limine-bootloader/limine.git
 	branch = v4.x-branch-binary
+[submodule "kernel/lib/frigg"]
+	path = kernel/lib/3rdparty/frigg
+	url = https://github.com/managarm/frigg
+[submodule "kernel/lib/3rdparty/cxxshim"]
+	path = kernel/lib/3rdparty/cxxshim
+	url = https://github.com/managarm/cxxshim
