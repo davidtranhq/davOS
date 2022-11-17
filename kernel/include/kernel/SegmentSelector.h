@@ -32,14 +32,14 @@ public:
         PrivilegeLevel requested_privilege_level,
         DescriptorTable table_type,
         uint16_t table_entry_index
-    ) : requested_privilege_level {requested_privilege_level},
-        table_type {table_type},
-        table_entry_index {table_entry_index}
+    ) : requested_privilege_level_ {requested_privilege_level},
+        table_type_ {table_type},
+        table_entry_index_ {table_entry_index}
     {}
 
 
     /**
-     * Convert the segment selector its raw 16-bit binary sequence.
+     * Convert the segment selector to its raw 16-bit binary sequence.
      * 
      * Bits:
      *      0-1: requested privilege level
@@ -48,15 +48,15 @@ public:
      */
     constexpr uint16_t to_uint16_t() const
     {
-        return table_entry_index << 3 
-             | static_cast<uint16_t>(table_type) << 2 
-             | static_cast<uint16_t>(requested_privilege_level);
+        return table_entry_index_ << 3 
+             | static_cast<uint16_t>(table_type_) << 2 
+             | static_cast<uint16_t>(requested_privilege_level_);
     }
 
 private:
-    PrivilegeLevel requested_privilege_level;
-    DescriptorTable table_type;
-    uint16_t table_entry_index;
+    PrivilegeLevel requested_privilege_level_;
+    DescriptorTable table_type_;
+    uint16_t table_entry_index_;
 };
 
 #endif

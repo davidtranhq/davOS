@@ -24,11 +24,11 @@ public:
         uint8_t interrupt_stack_table_offset,
         GateType gate_type,
         PrivilegeLevel required_privilege
-    ) : interrupt_service_routine_address {interrupt_service_routine_address},
-        selector {selector},
-        interrupt_stack_table_offset {interrupt_stack_table_offset},
-        gate_type {gate_type},
-        required_privilege {required_privilege}
+    ) : interrupt_service_routine_address_ {interrupt_service_routine_address},
+        selector_ {selector},
+        interrupt_stack_table_offset_ {interrupt_stack_table_offset},
+        gate_type_ {gate_type},
+        required_privilege_ {required_privilege}
     {}
 
     /**
@@ -51,28 +51,28 @@ public:
     {
         frg::array<uint8_t, 16> bytes = {};
 
-        uint16_t selector_bytes = selector.to_uint16_t();
+        uint16_t selector_bytes = selector_.to_uint16_t();
 
-        bytes[0] = interrupt_service_routine_address;
-        bytes[1] = interrupt_service_routine_address >> 8;
+        bytes[0] = interrupt_service_routine_address_;
+        bytes[1] = interrupt_service_routine_address_ >> 8;
         bytes[2] = selector_bytes;
         bytes[3] = selector_bytes >> 8;
-        bytes[4] = interrupt_stack_table_offset & 7;
+        bytes[4] = interrupt_stack_table_offset_ & 7;
         bytes[5] = 1 << 7 // present bit 47: must be 1 for the gate to be valid
-                 | static_cast<uint8_t>(required_privilege) << 5 | static_cast<uint8_t>(gate_type);
-        bytes[6] = interrupt_service_routine_address >> 16;
-        bytes[7] = interrupt_service_routine_address >> 16;
+                 | static_cast<uint8_t>(required_privilege_) << 5 | static_cast<uint8_t>(gate_type_);
+        bytes[6] = interrupt_service_routine_address_ >> 16;
+        bytes[7] = interrupt_service_routine_address_ >> 16;
         // bytes 8-15 are undefined by the x86_64 standard
 
         return bytes;
     }
 
 private:
-    uint64_t interrupt_service_routine_address;
-    SegmentSelector selector;
-    uint8_t interrupt_stack_table_offset;
-    GateType gate_type;
-    PrivilegeLevel required_privilege;
+    uint64_t interrupt_service_routine_address_;
+    SegmentSelector selector_;
+    uint8_t interrupt_stack_table_offset_;
+    GateType gate_type_;
+    PrivilegeLevel required_privilege_;
 };
 
 #endif
