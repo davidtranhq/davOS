@@ -15,7 +15,8 @@ END_CDECLS
 void kernel_main()
 {
     terminal_init();
-    printf("Hello, world!\n");    
-
+    printf("Hello, world!\n");
+    test_stack_smash();
+    
     kernel_hang();
 }

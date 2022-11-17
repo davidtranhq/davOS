@@ -6,6 +6,7 @@ OBJS += $(addprefix $(DIR)/, \
 	kernel/kernel.o \
 	kernel/main.o \
 	kernel/terminal.o \
+	kernel/tests.o \
 )
 
 include $(patsubst %, $(DIR)/%/module.mk, $(SUBMODULES))
