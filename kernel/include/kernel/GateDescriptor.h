@@ -59,7 +59,8 @@ public:
         bytes[3] = selector_bytes >> 8;
         bytes[4] = interrupt_stack_table_offset_ & 7;
         bytes[5] = 1 << 7 // present bit 47: must be 1 for the gate to be valid
-                 | static_cast<uint8_t>(required_privilege_) << 5 | static_cast<uint8_t>(gate_type_);
+                 | static_cast<uint8_t>(required_privilege_) << 5
+                 | static_cast<uint8_t>(gate_type_);
         bytes[6] = interrupt_service_routine_address_ >> 16;
         bytes[7] = interrupt_service_routine_address_ >> 16;
         // bytes 8-15 are undefined by the x86_64 standard
