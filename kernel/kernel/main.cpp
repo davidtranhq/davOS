@@ -20,7 +20,7 @@ struct GlobalConstructorTest
     }
 };
 
-__attribute__((__noinline__))
+[[ gnu::noinline ]]
 void stack_smash_test()
 {
 	char arr[10];

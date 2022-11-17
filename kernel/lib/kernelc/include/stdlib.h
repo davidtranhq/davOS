@@ -5,7 +5,7 @@
 
 BEGIN_CDECLS
 
-__attribute__((__noreturn__))
+[[ noreturn ]]
 void abort(void);
 
 END_CDECLS

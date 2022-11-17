@@ -11,13 +11,13 @@ BEGIN_CDECLS
  * @param fmt A format-specifier for the string
  * @param ... Variadic arguments for the format specifier
  */
-__attribute__((__noreturn__)) 
+[[ noreturn ]]
 void kernel_panic(const char *fmt, ...);
 
 /**
  * @brief Hang the kernel indefinitely.
  */
-__attribute__((__noreturn__))
+[[ noreturn ]]
 void kernel_hang();
 
 END_CDECLS

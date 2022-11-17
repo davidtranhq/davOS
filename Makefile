@@ -13,6 +13,10 @@ ARCH_DIR = x86-64
 # modules (sub-projects) contained in this project
 MODULES = kernel
 
+CXXFLAGS = -Wall -Werror
+
+########## NON-CONFIGURABLE STUFF BELOW ##########
+
 # popoulate the following variables with the module.mk files from each module
 OBJS :=
 LIBS :=
