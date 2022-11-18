@@ -33,8 +33,7 @@ public:
         required_privilege_ {required_privilege}
     {
         /**
-         * Convert the gate descriptor to its raw 16-byte byte sequence.
-         *
+         * descriptor byte representation:
          * Bits:
          *  0-15: lowest 16 bits of the ISR address
          *  16-31: segment selector
@@ -48,6 +47,7 @@ public:
          *  64-95: bits 32-63 of the ISR address
          *  96-127: reserved (undefined)
          */
+
         uint16_t selector_bytes = selector_.to_uint16_t();
 
         byte_representation_[0] = interrupt_service_routine_address_;
@@ -62,6 +62,9 @@ public:
         // bytes 8-15 are undefined by the x86_64 standard
     }
 
+    /**
+     * Get the 16-byte binary representation of the gate descriptor.
+     */
     constexpr const uint8_t *to_bytes() const
     {
         return byte_representation_.data();
@@ -75,7 +78,6 @@ private:
     PrivilegeLevel required_privilege_;
 
     frg::array<uint8_t, 16> byte_representation_;
-    uint8_t x;
 };
 
 #endif
