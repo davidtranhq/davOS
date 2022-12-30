@@ -5,6 +5,7 @@
 [submodule "kernel/lib/frigg"]
 	path = kernel/lib/3rdparty/frigg
 	url = https://github.com/davidtranhq/frigg
+	branch = size-ssize
 [submodule "kernel/lib/3rdparty/cxxshim"]
 	path = kernel/lib/3rdparty/cxxshim
 	url = https://github.com/managarm/cxxshim
