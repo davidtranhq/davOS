@@ -15,8 +15,7 @@ void test_stack_smash()
 	memset(arr, 0xa9, 12);
 }
 
-int test_interrupt_divide_by_zero()
+void test_interrupt_divide_by_zero()
 {
-    int x = 0;
-    return 1 / x;
+        __asm__("int $0");
 }

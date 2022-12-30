@@ -8,6 +8,6 @@ struct TestGlobalConstructor
 
 void test_stack_smash();
 
-int test_interrupt_divide_by_zero();
+void test_interrupt_divide_by_zero();
 
 #endif

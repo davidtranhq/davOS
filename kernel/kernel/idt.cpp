@@ -1,9 +1,16 @@
 #include <string.h>
 
-#include <kernel/GateDescriptor.h>
 #include <kernel/idt.h>
+#include <kernel/IDT.h>
+#include <kernel/IDTDescriptor.h>
 #include <kernel/kernel.h>
 #include <kernel/SegmentSelector.h>
+
+namespace
+{
+    IDT idt;
+    IDTDescriptor idt_descriptor(IDT::size, idt.address());
+}
 
 __attribute__((interrupt))
 void isr_divide_by_zero(void *interrupt_frame)
@@ -13,21 +20,16 @@ void isr_divide_by_zero(void *interrupt_frame)
 
 void idt_init()
 {
-    GateDescriptor de_descriptor(
-        reinterpret_cast<uint64_t>(&isr_divide_by_zero),
-        SegmentSelector(
-            PrivilegeLevel::kernel,
-            DescriptorTable::global,
-            0
-        ),
+    idt.load_gate_descriptor(
         0,
-        GateDescriptor::GateType::interrupt,
+        isr_divide_by_zero,
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, 5),
+        0,
+        IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     );
 
-    void *idt_base = reinterpret_cast<void *>(0x1000);
-    memcpy(idt_base, de_descriptor.to_bytes(), GateDescriptor::NUM_BYTES);
+    // load the address of the IDT Descriptor into the IDTR (IDT register)
+    __asm__("lidt %0" :: "m"(*idt_descriptor.address()));
 
-    // WRONG: this should be a linear address
-    __asm__("lidt 0x1000");
 }

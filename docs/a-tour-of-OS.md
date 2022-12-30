@@ -13,7 +13,8 @@
 
 ## Interrupts (x86)
 * **Interrupt Descriptor Table (IDT)**: table stored in memory containing the memory addresses of interrupt service routines (ISRs)
-* IDT location is stored in the `IDTR` register, loaded by the `LIDT <addr>` assembly instruction
+* **IDT Descriptor**: data structure stored in memory containing the size and address of the IDT
+* IDT location is stored in the `IDTR` register, loaded by the `LIDT <address_to_IDT_descriptor>` assembly instruction
 * **vectored events**: interrupts and exceptions; events that cause the CPU to jump to an ISR located in the IDT
     * interrupts and exceptions have an associated ID (vector) that tells the offset of the ISR in the IDT
     * **interrupt**: occurs due to a signal from hardware

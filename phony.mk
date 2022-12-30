@@ -1,9 +1,14 @@
-.PHONY: iso run clean
+.PHONY: qemu debug iso run clean
 
 ISOROOT = isoroot
 
 qemu: iso
 	qemu-system-x86_64 -cdrom $(ISO)
+
+# Run a qemu instance in the background and attach a GDB instance to it
+debug: iso
+	qemu-system-x86_64 -cdrom $(ISO) -S -gdb tcp::1234 &
+	gdb -ex 'target remote localhost:1234' -ex 'symbol-file $(BIN)' -ex 'b kernel_main'
 
 # Build a bootable CD-ROM for the OS
 iso: $(BIN)
