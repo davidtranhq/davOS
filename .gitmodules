@@ -4,7 +4,7 @@
 	branch = v4.x-branch-binary
 [submodule "kernel/lib/frigg"]
 	path = kernel/lib/3rdparty/frigg
-	url = https://github.com/managarm/frigg
+	url = https://github.com/davidtranhq/frigg
 [submodule "kernel/lib/3rdparty/cxxshim"]
 	path = kernel/lib/3rdparty/cxxshim
 	url = https://github.com/managarm/cxxshim
