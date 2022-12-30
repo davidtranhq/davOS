@@ -1,13 +1,6 @@
 #include <kernel/IDT.h>
 
-void IDT::load_gate_descriptor(
-    uint16_t index,
-    InterruptFunction interrupt_service_routine,
-    SegmentSelector selector,
-    uint8_t interrupt_stack_table_offset,
-    GateType gate_type,
-    PrivilegeLevel required_privilege
-)
+void IDT::load_gate_descriptor(uint16_t index, const GateDescriptor &gate_descriptor)
 {
     /**
      * descriptor byte representation:
@@ -24,6 +17,14 @@ void IDT::load_gate_descriptor(
      *  64-95: bits 32-63 of the ISR address
      *  96-127: reserved (undefined)
      */
+    auto [
+        interrupt_service_routine,
+        selector,
+        interrupt_stack_table_offset,
+        gate_type,
+        required_privilege
+    ] = gate_descriptor;
+
     uint16_t base = index * IDT::gate_size;
 
     uint16_t selector_bytes = selector.to_uint16_t();
