@@ -35,7 +35,16 @@ SECTIONS
  
     /* Move to the next memory page for .data */
     . += CONSTANT(MAXPAGESIZE);
- 
+
+    /* Expose a reference to the init_array, containing pointers to the constructors
+    for every global object */
+    .init_array : {
+		PROVIDE_HIDDEN (__init_array_start = .);
+		KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
+		KEEP (*(.init_array .ctors))
+		PROVIDE_HIDDEN (__init_array_end = .);
+	}
+    
     .data : {
         *(.data .data.*)
     } :data

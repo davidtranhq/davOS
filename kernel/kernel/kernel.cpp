@@ -6,8 +6,19 @@
 #include <kernel/kernel.h>
 #include <kernel/terminal.h>
 
+extern "C" void (*__init_array_start)(), (*__init_array_end)();
+
+void call_global_constructors()
+{
+    for (auto ctor = &__init_array_start; ctor < &__init_array_end; ctor++)
+    {
+        (*ctor)();
+    }
+}
+
 void kernel_init()
 {
+    call_global_constructors();
     terminal_init();
     idt_init();
 }
