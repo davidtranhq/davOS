@@ -23,7 +23,7 @@ void idt_init()
     idt.load_gate_descriptor(
         0,
         isr_divide_by_zero,
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, 5),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel

@@ -18,6 +18,25 @@ enum class DescriptorTable
 };
 
 /**
+ * @brief The segments defined in the global descriptor table.
+ * 'code' is readable and 'data' is writable.
+ * 'codeXX' means XX-bit segment: e.g. code16 is a writable segment with a limit of 0xffff.
+ * 
+ * The segments are defined and initialized by the Limine boot protocol.
+ * See https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md .
+ */
+enum class GDTSegment
+{
+    null = 0,
+    code16 = 1,
+    data16 = 2,
+    code32 = 3,
+    data32 = 4,
+    code64 = 5,
+    data64 = 6
+};
+
+/**
  * A binary data structure identifying a segment in the Global Descriptor Table
  * or a Local Descriptor Table.
  */
@@ -31,10 +50,10 @@ public:
     constexpr SegmentSelector(
         PrivilegeLevel requested_privilege_level,
         DescriptorTable table_type,
-        uint16_t table_entry_index
+        GDTSegment gdt_segment
     ) : requested_privilege_level_ {requested_privilege_level},
         table_type_ {table_type},
-        table_entry_index_ {table_entry_index}
+        gdt_segment_ {gdt_segment}
     {}
 
 
@@ -48,7 +67,7 @@ public:
      */
     constexpr uint16_t to_uint16_t() const
     {
-        return table_entry_index_ << 3 
+        return static_cast<uint16_t>(gdt_segment_) << 3 
              | static_cast<uint16_t>(table_type_) << 2 
              | static_cast<uint16_t>(requested_privilege_level_);
     }
@@ -56,7 +75,7 @@ public:
 private:
     PrivilegeLevel requested_privilege_level_;
     DescriptorTable table_type_;
-    uint16_t table_entry_index_;
+    GDTSegment gdt_segment_;
 };
 
 #endif
