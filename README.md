@@ -28,6 +28,8 @@ If using qemu, the OS can be booted from the ISO using `qemu-system-x86_64 -cdro
 
 Alternatively, run them `make qemu` to build the kernel and CD-ROM and run qemu all in one step.
 
+Use `make debug` to start QEMU in the background with an attached GDB instance.
+
 ### QEMU on WSL2
 
 Additional steps need to be taken to run qemu on WSL2 since it requires a GUI. [https://skeptric.com/wsl2-xserver/](https://web.archive.org/web/20220617121003/https://skeptric.com/wsl2-xserver/) provides a step-by-step guide on setting up a Windows X Server for running WSl2 GUI applications using [VcXsrv](https://sourceforge.net/projects/vcxsrv/).
