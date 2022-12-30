@@ -17,5 +17,5 @@ void test_stack_smash()
 
 void test_interrupt_divide_by_zero()
 {
-        __asm__("int $0");
+    __asm__("int $0");
 }
