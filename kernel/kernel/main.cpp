@@ -25,7 +25,7 @@ void kernel_main()
     printf("Memory Map:\n");
     for (uint64_t i = 0; i < request.response->entry_count; ++i) {
         auto entry = request.response->entries[i];
-        printf("base: %llu, length: %llu, type: %llu\n", entry->base, entry->length, entry->type);
+        printf("base: %x, length: %x, type: %x\n", entry->base, entry->length, entry->type);
     }
 
     kernel_hang();

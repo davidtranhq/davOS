@@ -12,6 +12,8 @@ static bool print(const char *data, size_t length)
     return true;
 }
 
+static char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
 int vprintf(const char *format, va_list args)
 {
     size_t written = 0;
@@ -57,7 +59,7 @@ int vprintf(const char *format, va_list args)
                     return -1;
                 written += len;
             }
-            else if (format[0] == 'l' && format[1] == 'l' && format[2] == 'u')
+            else if (format[0] == 'x')
             {
                 format += 3;
                 unsigned long long num = va_arg(args, unsigned long long);
@@ -74,10 +76,10 @@ int vprintf(const char *format, va_list args)
                 {
                     while (num > 0)
                     {
-                        int digit = num % 10 + '0';
+                        int digit = hex[num % 16];
                         str[str_start] = digit;
                         str_start -= 1;
-                        num /= 10;
+                        num /= 16;
                     }
                 }
                 str_start += 1;
