@@ -14,77 +14,82 @@ static bool print(const char *data, size_t length)
 
 int vprintf(const char *format, va_list args)
 {
-    int written = 0;
-
+    size_t written = 0;
     while (*format != '\0')
     {
-        size_t maxrem = INT_MAX - written;
-
+        // print regular characters and escaped %'s
         if (format[0] != '%' || format[1] == '%')
         {
+            // consume the escaping %
             if (format[0] == '%')
-                format++;
-            size_t amount = 1;
-            while (format[amount] && format[amount] != '%')
-                amount++;
-            if (maxrem < amount)
-            {
-                // TODO: Set errno to EOVERFLOW.
+                format += 1;
+            // print until the next format specifier or the end of the string
+            size_t chars_to_print = 1;
+            while (format[chars_to_print] && format[chars_to_print] != '%')
+                chars_to_print += 1;
+            if (!print(format, chars_to_print))
                 return -1;
-            }
-            if (!print(format, amount))
-                return -1;
-            format += amount;
-            written += amount;
-            continue;
+            format += chars_to_print;
+            written += chars_to_print;
         }
-
-        const char *format_begun_at = format++;
-
-        if (*format == 'c')
-        {
-            format++;
-            char c = (char)va_arg(args, int /* char promotes to int */);
-            if (!maxrem)
-            {
-                // TODO: Set errno to EOVERFLOW.
-                return -1;
-            }
-            if (!print(&c, sizeof(c)))
-                return -1;
-            written++;
-        }
-        else if (*format == 's')
-        {
-            format++;
-            const char *str = va_arg(args, const char *);
-            size_t len = strlen(str);
-            if (maxrem < len)
-            {
-                // TODO: Set errno to EOVERFLOW.
-                return -1;
-            }
-            if (!print(str, len))
-                return -1;
-            written += len;
-        }
+        // handle format specifiers
         else
         {
-            format = format_begun_at;
-            size_t len = strlen(format);
-            if (maxrem < len)
+            // consume the %
+            format += 1;
+            if (format[0] == 'c')
             {
-                // TODO: Set errno to EOVERFLOW.
-                return -1;
+                // consume the specifier
+                format += 1;
+                // standard mandates that variable arguments are promoted to at least int,
+                // so we accept an int and convert it to a char
+                char c = (char)va_arg(args, int);
+                if (!print(&c, sizeof(c)))
+                    return -1;
+                written += 1;
             }
-            if (!print(format, len))
-                return -1;
-            written += len;
-            format += len;
+            else if (format[0] == 's')
+            {
+                format += 1;
+                const char *str = va_arg(args, const char *);
+                size_t len = strlen(str);
+                if (!print(str, len))
+                    return -1;
+                written += len;
+            }
+            else if (format[0] == 'l' && format[1] == 'l' && format[2] == 'u')
+            {
+                format += 3;
+                unsigned long long num = va_arg(args, unsigned long long);
+                const int max_num_len = 128;
+                char str[max_num_len] = {0};
+                int str_start = max_num_len - 1;
+                str[str_start] = max_num_len - 1;
+                if (num == 0)
+                {
+                    str[str_start] = '0';
+                    str_start -= 1;
+                }
+                else
+                {
+                    while (num > 0)
+                    {
+                        int digit = num % 10 + '0';
+                        str[str_start] = digit;
+                        str_start -= 1;
+                        num /= 10;
+                    }
+                }
+                str_start += 1;
+                size_t str_len = max_num_len - str_start;
+                if (!print(str + str_start, str_len))
+                    return -1;
+                written += str_len;
+            }
         }
     }
-
-    return written;
+    
+    return written > INT_MAX ? -1 : written;
 }
 
 int printf(const char *__restrict format, ...)
