@@ -2,7 +2,7 @@
 
 #include <kernel/idt.h>
 #include <kernel/IDT.h>
-#include <kernel/IDTDescriptor.h>
+#include <kernel/TableDescriptor.h>
 #include <kernel/kernel.h>
 #include <kernel/SegmentSelector.h>
 
@@ -138,7 +138,7 @@ void isr_virtualization_exception(void *interrupt_frame)
 
 
 IDT idt;
-IDTDescriptor idt_descriptor(IDT::size, idt.address());
+TableDescriptor idt_descriptor(IDT::size, idt.address());
 
 IDT::GateDescriptor idt_descriptors[] = {
     {
