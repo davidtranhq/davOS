@@ -8,6 +8,9 @@
  
 BEGIN_CDECLS
 
+/**
+ * @brief The entry point of the operating system.
+ */
 void kernel_main(void);
 
 END_CDECLS
@@ -18,6 +21,6 @@ void kernel_main()
     
     printf("Hello, world!\n");
     test_interrupt_divide_by_zero();
-
+    
     kernel_hang();
 }

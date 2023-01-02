@@ -3,13 +3,7 @@
 
 #include <stddef.h>
 
-#include <compiler/macros.h>
-
-BEGIN_CDECLS
-
 void terminal_init(void);
 void terminal_write(const char *str, size_t size);
-
-END_CDECLS
 
 #endif
