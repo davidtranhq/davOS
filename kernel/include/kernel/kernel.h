@@ -3,8 +3,6 @@
 
 #include <compiler/macros.h>
 
-BEGIN_CDECLS
-
 /**
  * @brief Initialize kernel services such as the terminal, IDT, etc.
  */
@@ -24,7 +22,5 @@ void kernel_panic(const char *fmt, ...);
  */
 [[ noreturn ]]
 void kernel_hang();
-
-END_CDECLS
 
 #endif
