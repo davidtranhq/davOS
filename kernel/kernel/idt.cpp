@@ -136,152 +136,151 @@ void isr_virtualization_exception(void *interrupt_frame)
     kernel_panic("virtualization exception\n");
 }
 
-
-IDT idt;
-TableDescriptor idt_descriptor(IDT::size, idt.address());
-
 IDT::GateDescriptor idt_descriptors[] = {
     {
         isr_divide_error, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_debug_exception, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_nmi_interrupt,
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_breakpoint,
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_overflow, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_bound_range_exceeded,
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_invalid_opcode, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_device_not_available, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_double_fault,
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_coprocessor_segment_overrun, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_invalid_tss, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_segment_not_present, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_stack_segment_fault, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_general_protection, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_page_fault, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_math_fault, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_alignment_check, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_machine_check, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_simd_floating_point_exception, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     },
     {
         isr_virtualization_exception, 
-        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::code64),
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
         0,
         IDT::GateType::interrupt,
         PrivilegeLevel::kernel
     }
 };
+
+IDT idt;
+TableDescriptor idt_descriptor(IDT::size, idt.address());
 
 } // anonymous namespace
 

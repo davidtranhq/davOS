@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <kernel/gdt.h>
 #include <kernel/idt.h>
 #include <kernel/kernel.h>
 #include <kernel/terminal.h>
@@ -20,6 +21,7 @@ void kernel_init()
 {
     call_global_constructors();
     terminal_init();
+    gdt_init();
     idt_init();
 }
 

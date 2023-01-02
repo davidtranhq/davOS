@@ -24,7 +24,7 @@ public:
      * @param table_address a pointer to the internal byte representation of the 
      * table.
      */
-    TableDescriptor(uint16_t size, const uint8_t *table_address);
+    TableDescriptor(uint16_t size, const void *table_address);
 
     /**
      * @brief Get a pointer to the internal byte representation.

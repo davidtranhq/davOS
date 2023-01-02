@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include <kernel/gdt.h>
+
 // Integral representation corresponds to ring levels (e.g. kernel = ring 0)
 enum class PrivilegeLevel
 {
@@ -15,25 +17,6 @@ enum class DescriptorTable
 {
     global = 0,
     local = 1
-};
-
-/**
- * @brief The segments defined in the global descriptor table.
- * 'code' is readable and 'data' is writable.
- * 'codeXX' means XX-bit segment: e.g. code16 is a writable segment with a limit of 0xffff.
- * 
- * The segments are defined and initialized by the Limine boot protocol.
- * See https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md .
- */
-enum class GDTSegment
-{
-    null = 0,
-    code16 = 1,
-    data16 = 2,
-    code32 = 3,
-    data32 = 4,
-    code64 = 5,
-    data64 = 6
 };
 
 /**

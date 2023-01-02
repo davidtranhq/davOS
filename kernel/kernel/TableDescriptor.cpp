@@ -1,7 +1,7 @@
 #include <kernel/TableDescriptor.h>
 #include <kernel/kernel.h>
 
-TableDescriptor::TableDescriptor(uint16_t size, const uint8_t *table_address)
+TableDescriptor::TableDescriptor(uint16_t size, const void *table_address)
 {
     // the size parameter is one less than the actual table size in bytes
     uint16_t adjusted_size = size - 1;

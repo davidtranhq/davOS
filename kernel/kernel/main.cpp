@@ -31,5 +31,7 @@ void kernel_main()
         printf("base: %x, length: %x, type: %x\n", entry->base, entry->length, entry->type);
     }
 
+    test_interrupt_divide_by_zero();
+
     kernel_hang();
 }
