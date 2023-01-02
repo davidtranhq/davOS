@@ -20,7 +20,7 @@ void kernel_main()
     kernel_init();
     
     printf("Hello, world!\n");
-    test_interrupt_divide_by_zero();
+    printf("The quick brown fox jumped over the lazy dog!?");
     
     kernel_hang();
 }

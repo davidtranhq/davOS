@@ -434,8 +434,9 @@ void terminal_write(const char *str, size_t size)
         }
         else
         {
-            uint64_t x = cursor_x * font_width;
-            uint64_t y = cursor_y * font_height;
+            uint8_t padding = 1;
+            uint64_t x = cursor_x * (font_width + padding);
+            uint64_t y = cursor_y * (font_height + padding);
             draw_char(str[i], x, y);
             cursor_advance();
         }
