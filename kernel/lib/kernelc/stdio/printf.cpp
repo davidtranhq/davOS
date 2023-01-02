@@ -61,7 +61,7 @@ int vprintf(const char *format, va_list args)
             }
             else if (format[0] == 'x')
             {
-                format += 3;
+                format += 1;
                 unsigned long long num = va_arg(args, unsigned long long);
                 const int max_num_len = 128;
                 char str[max_num_len] = {0};
