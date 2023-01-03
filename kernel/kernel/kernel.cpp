@@ -9,6 +9,9 @@
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
+namespace
+{
+
 void call_global_constructors()
 {
     for (auto ctor = &__init_array_start; ctor < &__init_array_end; ctor++)
@@ -16,6 +19,8 @@ void call_global_constructors()
         (*ctor)();
     }
 }
+
+} // anonymous namespace
 
 void kernel_init()
 {
@@ -34,8 +39,7 @@ void kernel_panic(const char *fmt, ...)
     vprintf(fmt, args);
     va_end(args);
 
-    while (1) {}
-    ::__builtin_unreachable();
+    kernel_hang();
 }
 
 [[ noreturn ]]
