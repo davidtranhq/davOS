@@ -2,16 +2,19 @@
 OUTPUT_FORMAT(elf64-x86-64)
 OUTPUT_ARCH(i386:x86-64)
  
-/* kernel_main is the entry point */
-ENTRY(kernel_main)
+/* The entry point of the operating system */
+ENTRY(kernel_pre_main)
  
+kernel_stack_size = 64K;
+
 /* Define the program headers we want so the bootloader gives us the right */
 /* MMU permissions */
 PHDRS
 {
-    text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Execute + Read */
-    rodata  PT_LOAD    FLAGS((1 << 2)) ;            /* Read only */
-    data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
+    text     PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Execute + Read */
+    rodata   PT_LOAD    FLAGS((1 << 2)) ;            /* Read only */
+    data     PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
+    reserved PT_LOAD    FLAGS(0) ;                   /* No perimssions */
 }
  
 SECTIONS
@@ -32,9 +35,6 @@ SECTIONS
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
- 
-    /* Move to the next memory page for .data */
-    . += CONSTANT(MAXPAGESIZE);
 
     /* Expose a reference to the init_array, containing pointers to the constructors
     for every global object */
@@ -43,8 +43,19 @@ SECTIONS
 		KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
 		KEEP (*(.init_array .ctors))
 		PROVIDE_HIDDEN (__init_array_end = .);
-	}
-    
+	} :rodata
+
+    .stack_guard ALIGN(CONSTANT(MAXPAGESIZE)): {
+        . += CONSTANT(MAXPAGESIZE);
+    } :reserved
+
+    .stack ALIGN(CONSTANT(MAXPAGESIZE)): {
+        . += kernel_stack_size;
+    } :data
+
+    stack_start = .;
+
+    /* .data is on a different page than the stack since the stack is 8-byte aligned */
     .data : {
         *(.data .data.*)
     } :data

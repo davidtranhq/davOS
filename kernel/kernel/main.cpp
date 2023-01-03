@@ -5,33 +5,33 @@
 #include <kernel/limine.h>
 #include <kernel/terminal.h>
 #include <kernel/tests.h>
- 
-BEGIN_CDECLS
+#include <kernel/types.h> // Symbol
 
-/**
- * @brief The entry point of the operating system.
- */
-void kernel_main(void);
+int stack_overflow(int x)
+{
+    printf("%x ", x);
+    return stack_overflow(x + 1);
+}
 
-END_CDECLS
-
-struct limine_memmap_request request = {
-    .id = LIMINE_MEMMAP_REQUEST,
-    .revision = 0
-};
-
+[[ noreturn ]]
 void kernel_main()
 {
     kernel_init();
     
     printf("Hello, world!\n");
-    printf("Memory Map:\n");
-    for (uint64_t i = 0; i < request.response->entry_count; ++i) {
-        auto entry = request.response->entries[i];
-        printf("base: %x, length: %x, type: %x\n", entry->base, entry->length, entry->type);
-    }
-
-    test_interrupt_divide_by_zero();
 
     kernel_hang();
+}
+
+extern LinkerAddress stack_start;
+extern "C"
+[[ noreturn ]]
+void kernel_pre_main()
+{
+    // Replace Limine's stack with our own so that we can reclaim bootloader-reclaimable memory.
+    // It's fine that we throw away the old stack contents since there are no stack variables
+    // in this function and we don't plan on returning to it (kernel_main() is noreturn)
+    __asm__("mov %%rsp, %0" :: "r"(stack_start));
+
+    kernel_main();
 }
