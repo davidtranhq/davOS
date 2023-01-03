@@ -10,4 +10,6 @@ void test_stack_smash();
 
 void test_interrupt_divide_by_zero();
 
+void test_stack_overflow();
+
 #endif

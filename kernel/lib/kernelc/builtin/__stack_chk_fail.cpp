@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <compiler/macros.h>
 #include <kernel/kernel.h>
 
 // canary value used to check for stack-smashing

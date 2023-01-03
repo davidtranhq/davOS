@@ -19,3 +19,9 @@ void test_interrupt_divide_by_zero()
 {
     __asm__("int $0");
 }
+
+void test_stack_overflow(int x)
+{
+    printf("%x ", x);
+    test_stack_overflow(x + 1);
+}

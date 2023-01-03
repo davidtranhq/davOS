@@ -1,17 +1,10 @@
 #include <stdio.h>
 
-#include <compiler/macros.h>
 #include <kernel/kernel.h>
 #include <kernel/limine.h>
 #include <kernel/terminal.h>
 #include <kernel/tests.h>
-#include <kernel/types.h> // Symbol
-
-int stack_overflow(int x)
-{
-    printf("%x ", x);
-    return stack_overflow(x + 1);
-}
+#include <kernel/types.h> // LinkerAddress
 
 [[ noreturn ]]
 void kernel_main()

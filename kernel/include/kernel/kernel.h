@@ -1,8 +1,6 @@
 #ifndef DAVOS_KERNEL_PANIC_H_INCLUDED
 #define DAVOS_KERNEL_PANIC_H_INCLUDED
 
-#include <compiler/macros.h>
-
 /**
  * @brief Initialize kernel services such as the terminal, IDT, etc.
  */
