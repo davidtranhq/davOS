@@ -23,6 +23,10 @@ struct limine_memmap_request request = {
 void kernel_main()
 {
     kernel_init();
+
+#ifdef TEST_BUILD
+    run_all_tests();
+#endif
     
     printf("Hello, world!\n");
     printf("Memory Map:\n");
@@ -30,8 +34,6 @@ void kernel_main()
         auto entry = request.response->entries[i];
         printf("base: %x, length: %x, type: %x\n", entry->base, entry->length, entry->type);
     }
-
-    test_interrupt_divide_by_zero();
 
     kernel_hang();
 }
