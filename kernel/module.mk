@@ -8,6 +8,7 @@ OBJS += $(addprefix $(DIR)/, \
 	kernel/IDT.o \
 	kernel/kernel.o \
 	kernel/main.o \
+	kernel/reload_segment_registers.o \
 	kernel/TableDescriptor.o \
 	kernel/terminal.o \
 	kernel/tests.o \

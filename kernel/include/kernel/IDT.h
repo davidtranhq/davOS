@@ -28,7 +28,7 @@ public:
         uint64_t flags;
         uint64_t sp;
         uint64_t ss;
-    };
+    } __attribute__((packed));
 
     using InterruptFunction = union
     {

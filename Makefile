@@ -73,6 +73,9 @@ $(BIN): $(OBJS) $(LIBS)
 %.o: %.cpp
 	$(CXX) -c $< $(CXXFLAGS) $(CPPFLAGS) -o $@
 
+%.o: %.S
+	$(CXX) -c $< $(CXXFLAGS) $(CPPFLAGS) -o $@
+
 %.a:
 	$(AR) rcs $@ $^
 

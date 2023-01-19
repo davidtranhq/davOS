@@ -46,7 +46,7 @@ void isr_nmi_interrupt(IDT::InterruptFrame *frame)
 __attribute__((interrupt))
 void isr_breakpoint(IDT::InterruptFrame *frame_arg)
 {
-    // printf("interrupt handling test: PASSED\n");
+    printf("interrupt handling test: PASSED\n");
 }
 #else
 __attribute__((interrupt))

@@ -39,7 +39,6 @@ void test_interrupt_handling()
     // interrupt 3 is the BREAKPOINT exception, it is modified in the TEST_BUILD to
     // run the interrupt handling test
     __asm__("int $3");
-    printf("here");
 }
 
 void test_global_constructor()
@@ -55,6 +54,6 @@ void run_all_tests()
     test_global_constructor();
     test_interrupt_handling();
     test_stack_smash();
-    printf("FINISHED ALL TESTS\n");
+    printf("\nFINISHED ALL TESTS\n");
     printf("----------\n\n");
 }

@@ -47,9 +47,14 @@
 
 /**
  * @brief Set if the CPU has accessed this segment.
- * This should initially be cleared.
+ * This should be set if supervisor write-protection is enabled (cr0.WP)
+ * (enabled by default with Limine) and the GDT is located in read-only memory.
+ * 
+ * Otherwise, if ACCESSED(0), loading the segment registers would attempt a write
+ * to the access bit, which would cause page-fault, since the GDT is not mapped with write
+ * permissions.
  */
-#define ACCESSED(b) (b)
+#define ACCESSED(b) b
 
 /**
  * @brief The scaling factor for the 'limit' field in the segment.
@@ -114,7 +119,7 @@ constexpr uint64_t make_segment_descriptor(
                          | IS_CODE_SEGMENT(1) \
                          | CODE_EXACT_PRIVILEGE \
                          | CODE_READABLE \
-                         | ACCESSED(0)
+                         | ACCESSED(1)
 
 #define KERNEL_DATA_ACCESS PRESENT(1) \
                          | KERNEL_PRIVILEGE \
@@ -122,7 +127,7 @@ constexpr uint64_t make_segment_descriptor(
                          | IS_CODE_SEGMENT(0) \
                          | DATA_GROWS_UPWARD \
                          | DATA_WRITABLE \
-                         | ACCESSED(0)
+                         | ACCESSED(1)
 
 #define USER_CODE_ACCESS PRESENT(1) \
                        | USER_PRIVILEGE \
@@ -130,7 +135,7 @@ constexpr uint64_t make_segment_descriptor(
                        | IS_CODE_SEGMENT(1) \
                        | CODE_EXACT_PRIVILEGE \
                        | CODE_READABLE \
-                       | ACCESSED(0)
+                       | ACCESSED(1)
 
 #define USER_DATA_ACCESS PRESENT(1) \
                        | USER_PRIVILEGE \
@@ -138,7 +143,7 @@ constexpr uint64_t make_segment_descriptor(
                        | IS_CODE_SEGMENT(0) \
                        | DATA_GROWS_UPWARD \
                        | DATA_WRITABLE \
-                       | ACCESSED(0)
+                       | ACCESSED(1)
 
 #define LONG_MODE_CODE_PAGING PAGE_GRANULARITY | LONG_MODE_CODE(1)
 #define PROTECTED_32_PAGING PAGE_GRANULARITY | PROTECTED_32
@@ -160,5 +165,11 @@ const TableDescriptor gdt_descriptor(
 
 void gdt_init()
 {
+    // initialize the GDT register
     __asm__("lgdt %0" :: "m"(*gdt_descriptor.address()));
+    // reconfigure the segment registers to use the new GDT
+    reload_segment_registers(
+        static_cast<uint64_t>(GDTSegment::kernel_code) * 8,
+        static_cast<uint64_t>(GDTSegment::kernel_data) * 8
+    );
 }
