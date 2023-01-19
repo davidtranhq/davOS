@@ -21,7 +21,20 @@ public:
         trap = 0xf
     };
 
-    using InterruptFunction = void (*)(void *interrupt_frame);
+    struct InterruptFrame
+    {
+        uint64_t ip;
+        uint64_t cs;
+        uint64_t flags;
+        uint64_t sp;
+        uint64_t ss;
+    };
+
+    using InterruptFunction = union
+    {
+        void (*no_error_code)(InterruptFrame *);
+        void (*with_error_code)(InterruptFrame *, uint64_t);
+    };
 
     /**
      * @brief Contains the information required for one entry in the IDT.
