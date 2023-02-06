@@ -9,10 +9,19 @@ The articles in the above links are detailed enough to follow, but the steps are
 1. Create a build source directory (e.g. `$HOME/gcc-cross`) to hold the GCC source files.
 1. Download and extract the [GCC source files](https://ftp.gnu.org/gnu/gcc/) corresponding to your installed GCC version (use `gcc --version` to check) to the build source directory.
 1. Download and extract the [binutils source files](https://ftp.gnu.org/gnu/binutils/?C=M;O=D) corresponding to your installed binutils version (use `ld --version` to check) to the build source directory.
-1. Install the dependencies listed [here](https://wiki.osdev.org/GCC_Cross-Compiler#Installing_Dependencies) using the following command:
+1. Install dependencies. 
+    ### Linux
+    Install the depndencies listed [here](https://wiki.osdev.org/GCC_Cross-Compiler#Installing_Dependencies) using the following command:
     ```
     sudo apt install bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo
     ```
+
+    ### MacOS
+    Install the dependencies using the following command:
+    ```
+    brew install gmp mpfr libmpc
+    ```
+    
 1. Export the following environnment variables (configured to your liking)
     ```bash
     export PREFIX="$HOME/opt/cross" # directory to install the compiler (under $PREFIX/bin)
@@ -50,6 +59,7 @@ The articles in the above links are detailed enough to follow, but the steps are
             ;;
         ```
 1. Build `gcc`:
+    ### Linux
     ```bash
     cd $HOME/gcc-cross # your build source directory
 
@@ -61,6 +71,14 @@ The articles in the above links are detailed enough to follow, but the steps are
     make install-gcc
     make install-target-libgcc
     ```
+    ### MacOS
+    Identical to the Linux steps, but we also need to specify where to find the installed dependencies when creating the Makefile with `configure`:
+    ```
+    ../gcc-12.2.0/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers \
+        --with-gmp=/opt/homebrew/Cellar/gmp/6.2.1_1 \
+        --with-mpfr=/opt/homebrew/Cellar/mpfr/4.2.0 \
+        --with-mpc=/opt/homebrew/Cellar/libmpc/1.3.1 
+    ``` 
 1. Append the following to `~/.profile` to add the built compilers and linkers to the path:
     ```bash
         export PATH="<PREFIX>/bin:$PATH"
