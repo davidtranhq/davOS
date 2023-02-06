@@ -25,9 +25,9 @@ void call_global_constructors()
 void kernel_init()
 {
     call_global_constructors();
-    terminal_init();
     gdt_init();
     idt_init();
+    terminal_init();
 }
 
 [[ noreturn ]]

@@ -6,6 +6,8 @@
 #ifndef DAVOS_KERNEL_GDT_H_INCLUDED
 #define DAVOS_KERNEL_GDT_H_INCLUDED
 
+#include <cstdint>
+
 /**
  * @brief The segments defined in the global descriptor table.
  * 'code' is readable and 'data' is writable.
@@ -24,13 +26,23 @@ enum class GDTSegment
  * following segments in order:
  * 
  * Null descriptor
- * 16-bit code descriptor. Base = 0, limit = 0xffff. Readable.
- * 16-bit data descriptor. Base = 0, limit = 0xffff. Writable.
- * 32-bit code descriptor. Base = 0, limit = 0xffffffff. Readable.
- * 32-bit data descriptor. Base = 0, limit = 0xffffffff. Writable.
- * 64-bit code descriptor. Base and limit irrelevant. Readable.
- * 64-bit data descriptor. Base and limit irrelevant. Writable.
+ * 64-bit kernel code descriptor. Base and limit irrelevant. Readable.
+ * 64-bit kernel data descriptor. Base and limit irrelevant. Writable.
+ * 64-bit user code descriptor. Base and limit irrelevant. Readable.
+ * 64-bit data code descriptor. Base and limit irrelevant. Writable.
  */
 void gdt_init();
+
+
+/**
+ * @brief Reloads the CS, DS, ES, FS, GS, and SS segment registers.
+ * 
+ * @param gdt_code_segment_offset offset into the GDT pointing to a code segment. Should be a 
+ * multiple of 8 (since each segment is 8 bytes)
+ * @param gdt_data_segment_offset offset into the GDT pointing to a data segment. Should be a
+ * multiple of 8 (since each segment is 8 bytes)
+ */
+extern "C"
+void reload_segment_registers(uint64_t gdt_code_segment_offset, uint64_t gdt_data_segment_offset);
 
 #endif

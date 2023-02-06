@@ -1,12 +1,12 @@
-#ifndef DAVOS_KERNEL_IDT_TYPE_H_INCLUDED
-#define DAVOS_KERNEL_IDT_TYPE_H_INCLUDED
+#ifndef DAVOS_KERNEL_IDT_STRUCTURE_H_INCLUDED
+#define DAVOS_KERNEL_IDT_STRUCTURE_H_INCLUDED
 
 #include <stdint.h>
 
 #include <frg/array.hpp>
 #include <kernel/SegmentSelector.h>
 
-class IDT
+class IDTStructure
 {
 public:
     static constexpr uint16_t num_gates = 256;
@@ -21,7 +21,20 @@ public:
         trap = 0xf
     };
 
-    using InterruptFunction = void (*)(void *interrupt_frame);
+    struct InterruptFrame
+    {
+        uint64_t ip;
+        uint64_t cs;
+        uint64_t flags;
+        uint64_t sp;
+        uint64_t ss;
+    } __attribute__((packed));
+
+    using InterruptFunction = union
+    {
+        void (*no_error_code)(InterruptFrame *);
+        void (*with_error_code)(InterruptFrame *, uint64_t);
+    };
 
     /**
      * @brief Contains the information required for one entry in the IDT.
@@ -29,13 +42,13 @@ public:
     struct GateDescriptor
     {
         // a function pointer to the ISR callback void isr(*interrupt_frame)
-        IDT::InterruptFunction interrupt_service_routine;
+        IDTStructure::InterruptFunction interrupt_service_routine;
         // a segment selector pointing to a valid code segment in the GDT
         SegmentSelector selector;
         // specifies which stack to use (stored in the interrupt stack table) for the ISR
         uint8_t interrupt_stack_table_offset;
         // differentiates between interrupts and traps
-        IDT::GateType gate_type;
+        IDTStructure::GateType gate_type;
         // required CPU privilege for this gate: hardware interrupts ignroe this
         PrivilegeLevel required_privilege;
     };

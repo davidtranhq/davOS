@@ -10,6 +10,10 @@
 void kernel_main()
 {
     kernel_init();
+
+#ifdef TEST_BUILD
+    run_all_tests();
+#endif
     
     printf("Hello, world!\n");
 
