@@ -5,7 +5,7 @@ INCLUDE_DIRS += $(DIR)/include
 OBJS += $(addprefix $(DIR)/, \
 	kernel/gdt.o \
 	kernel/idt.o \
-	kernel/IDT.o \
+	kernel/IDTStructure.o \
 	kernel/kernel.o \
 	kernel/main.o \
 	kernel/reload_segment_registers.o \

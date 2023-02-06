@@ -1,6 +1,6 @@
-#include <kernel/IDT.h>
+#include <kernel/IDTStructure.h>
 
-void IDT::load_gate_descriptor(uint16_t index, const GateDescriptor &gate_descriptor)
+void IDTStructure::load_gate_descriptor(uint16_t index, const GateDescriptor &gate_descriptor)
 {
     /**
      * descriptor byte representation:
@@ -25,7 +25,7 @@ void IDT::load_gate_descriptor(uint16_t index, const GateDescriptor &gate_descri
         required_privilege
     ] = gate_descriptor;
 
-    uint16_t base = index * IDT::gate_size;
+    uint16_t base = index * IDTStructure::gate_size;
 
     uint16_t selector_bytes = selector.to_uint16_t();
 
@@ -56,7 +56,7 @@ void IDT::load_gate_descriptor(uint16_t index, const GateDescriptor &gate_descri
     byte_representation_[base + 15] = 0xbe;
 }
 
-const uint8_t *IDT::address() const
+const uint8_t *IDTStructure::address() const
 {
     return byte_representation_.data();
 }
