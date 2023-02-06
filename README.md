@@ -14,6 +14,7 @@ NOTE: Because this repostiory contains git submodules, it should be cloned with
 ```bash
 git clone --recurse-submodules git@github.com:davidtranhq/davOS.git
 ```
+Or, if already cloned, run `git submodule init` followed by `git submodule update` to checkout the required submodules.
 
 Run `make` to build the kernel `davos.elf`.
 
