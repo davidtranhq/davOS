@@ -10,11 +10,12 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <frg/optional.hpp>
 #include <kernel/frame_allocator.h>
 #include <kernel/kernel.h>
-#include <kernel/limine.h>
+#include <kernel/limine_features.h>
 
 namespace
 {
@@ -77,13 +78,6 @@ frg::optional<FixedStack> free_stack;
 // The size of the physical frames in bytes
 constexpr size_t frame_size = 0x1000;
 
-limine_memmap_request memmap_request = {
-    .id = LIMINE_MEMMAP_REQUEST,
-    .revision =0
-};
-
-limine_memmap_response *memory_map = memmap_request.response;
-
 /**
  * @brief Check if an entry in the Limine memory map is allocatable (available for use)
  */
@@ -99,9 +93,10 @@ bool is_allocatable(struct limine_memmap_entry *entry)
 size_t get_num_allocatable_frames()
 {
     size_t allocatable_frames = 0;
-    for (size_t i = 0; i < memory_map->entry_count; ++i)
+    for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
     {
-        struct limine_memmap_entry *entry = memory_map->entries[i];
+        struct limine_memmap_entry *entry = limine::memory_map->entries[i];
+        printf("base: %x, limit: %x, type: %x\n", entry->base, entry->length, entry->type);
         if (is_allocatable(entry))
             allocatable_frames += entry->length / frame_size;
     }
@@ -132,9 +127,9 @@ uintptr_t allocate_initial_contiguous_frames(size_t num_frames)
 {
     // look for a contiguous memory segment that is big enough to hold num_frames,
     // and is allocatable
-    for (size_t i = 0; i < memory_map->entry_count; ++i)
+    for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
     {
-        struct limine_memmap_entry *entry = memory_map->entries[i];
+        struct limine_memmap_entry *entry = limine::memory_map->entries[i];
         // check if this segment is allocatable and big enough
         if (is_allocatable(entry) && entry->length >= num_frames * frame_size)
             return entry->base;
@@ -156,9 +151,9 @@ void fill_free_stack(
 )
 {
     // add the allocatable frames from each segment to the free stack
-    for (size_t i = 0; i < memory_map->entry_count; ++i)
+    for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
     {
-        struct limine_memmap_entry *entry = memory_map->entries[i];
+        struct limine_memmap_entry *entry = limine::memory_map->entries[i];
         if (!is_allocatable(entry))
             continue;
 

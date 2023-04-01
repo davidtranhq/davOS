@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include <kernel/limine.h>
+#include <kernel/limine_features.h>
 #include <kernel/terminal.h>
 
 namespace
@@ -355,13 +355,7 @@ const uint8_t font_bytes[] = {
 uint16_t font_width = 8;
 uint16_t font_height = 16;
 
-volatile struct limine_framebuffer_request request =
-{
-    .id = LIMINE_FRAMEBUFFER_REQUEST,
-    .revision = 1
-};
-
-limine_framebuffer *terminal_framebuffer = request.response->framebuffers[0];
+limine_framebuffer *terminal_framebuffer = limine::framebuffers_info->framebuffers[0];
 uint64_t width = terminal_framebuffer->width;
 uint64_t height = terminal_framebuffer->height;
 uint64_t cursor_x = 0;
