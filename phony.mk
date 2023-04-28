@@ -1,3 +1,9 @@
+ifeq ($(shell uname -s),Darwin)
+	OS := macOS
+else
+	OS := other
+endif
+
 .PHONY: qemu debug test debug-test iso run clean
 
 ISOROOT = isoroot
@@ -8,7 +14,15 @@ qemu: iso
 # Run a qemu instance in the background and attach a GDB instance to it
 debug: iso
 	qemu-system-x86_64 -cdrom $(ISO) -S -gdb tcp::1234 &
+ifeq ($(OS), macOS)
+	lldb \
+		-o "target create $(BIN)" \
+		-o "gdb-remote localhost:1234" \
+		-o "breakpoint set --name kernel_main" \
+		-o "c"
+else
 	gdb -ex 'target remote localhost:1234' -ex 'symbol-file $(BIN)' -ex 'b kernel_main'
+endif
 
 test: CPPFLAGS += -DTEST_BUILD
 test: qemu
