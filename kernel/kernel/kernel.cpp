@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <kernel/frame_allocator.h>
 #include <kernel/gdt.h>
 #include <kernel/idt.h>
 #include <kernel/kernel.h>
@@ -28,6 +29,7 @@ void kernel_init()
     gdt_init();
     idt_init();
     terminal_init();
+    frame_allocator_init();
 }
 
 [[ noreturn ]]
