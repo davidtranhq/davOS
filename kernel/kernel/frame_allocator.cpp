@@ -83,8 +83,7 @@ constexpr size_t frame_size = 0x1000;
  */
 bool is_allocatable(struct limine_memmap_entry *entry)
 {
-    return entry->type == LIMINE_MEMMAP_USABLE
-        || entry->type ==LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE;
+    return entry->type == LIMINE_MEMMAP_USABLE;
 }
 
 /**
@@ -201,16 +200,49 @@ void frame_allocator_init()
     fill_free_stack(free_stack_frames_begin, free_stack_frames_end);
 }
 
-uintptr_t allocate_frame()
+void *allocate_frame()
 {
     if (free_stack->empty())
         kernel_panic("ran out of physical memory to allocate!");
     uintptr_t frame = free_stack->top();
     free_stack->pop();
-    return frame;
+    return reinterpret_cast<void *>(frame);
+}
+
+void *allocate_frame_limine_virtual()
+{
+    auto physical_frame = allocate_frame();
+    auto limine_virtual_frame = physical_to_limine_virtual(
+        reinterpret_cast<uintptr_t>(physical_frame));
+    if (limine_virtual_frame == 0)
+        kernel_panic("allocate_frame_limine_virtual: \
+            frame allocated to unmapped Limine virtual address");
+    return limine_virtual_frame;
 }
 
 void deallocate_frame(uintptr_t frame)
 {
     free_stack->push(frame);
+}
+
+void *physical_to_limine_virtual(uintptr_t physical_address)
+{
+    return reinterpret_cast<void *>(physical_address);
+}
+
+void reclaim_limine_memory()
+{
+    // add the allocatable frames from each segment to the free stack
+    for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
+    {
+        struct limine_memmap_entry *entry = limine::memory_map->entries[i];
+        // only reclaim bootloader-reclaimable entries
+        if (entry->type != LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE)
+            continue;
+
+        // push the allocatable frames from this segment to the free stack
+        uint64_t end_of_entry = entry->base + entry->length;
+        for (uintptr_t frame = entry->base; frame < end_of_entry; frame += frame_size)
+            free_stack->push(frame);
+    }
 }
