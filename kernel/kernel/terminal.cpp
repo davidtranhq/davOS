@@ -354,6 +354,8 @@ const uint8_t font_bytes[] = {
 
 uint16_t font_width = 8;
 uint16_t font_height = 16;
+uint16_t right_padding = 1;
+uint16_t bottom_padding = 1;
 
 limine_framebuffer *terminal_framebuffer = limine::framebuffers_info->framebuffers[0];
 uint64_t width = terminal_framebuffer->width;
@@ -361,6 +363,29 @@ uint64_t height = terminal_framebuffer->height;
 uint64_t cursor_x = 0;
 uint64_t cursor_y = 0;
 uint64_t max_line_length = 100;
+uint64_t max_lines = 45;
+
+/**
+ * @brief Get the start address of the framebuffer for the terminal.
+ */
+uint32_t *framebuffer_address()
+{
+    return static_cast<uint32_t *>(terminal_framebuffer->address);
+}
+
+/**
+ * @brief Scroll down the terminal n lines. 
+ */
+void scroll_down(size_t n)
+{
+    uint32_t *buffer_start = framebuffer_address();
+    uint64_t buffer_size = width * height;
+    uint64_t pixels_per_text_line = width * (font_height + bottom_padding);
+    for (uint64_t offset = n * pixels_per_text_line; offset < buffer_size; ++offset)
+    {
+        buffer_start[offset - n * pixels_per_text_line] = buffer_start[offset];
+    }
+}
 
 /**
  * @brief Move the cursor to the start of a new line.
@@ -368,8 +393,14 @@ uint64_t max_line_length = 100;
 void cursor_newline()
 {
     cursor_x = 0;
-    // TODO: implement terminal scrolling
-    cursor_y += 1;
+    if (cursor_y == max_lines)
+    {
+        scroll_down(1);
+    }
+    else
+    {
+        cursor_y += 1;
+    }
 }
 
 /**
@@ -387,7 +418,7 @@ void cursor_advance()
  */
 void draw_pixel(uint64_t x, uint64_t y)
 {
-    uint32_t *buffer = static_cast<uint32_t *>(terminal_framebuffer->address);
+    uint32_t *buffer = framebuffer_address();
 
     const uint32_t white_pixel = 0xffffffff;
     buffer[y * width + x] = white_pixel;
@@ -428,9 +459,8 @@ void terminal_write(const char *str, size_t size)
         }
         else
         {
-            uint8_t padding = 1;
-            uint64_t x = cursor_x * (font_width + padding);
-            uint64_t y = cursor_y * (font_height + padding);
+            uint64_t x = cursor_x * (font_width + right_padding);
+            uint64_t y = cursor_y * (font_height + bottom_padding);
             draw_char(str[i], x, y);
             cursor_advance();
         }
