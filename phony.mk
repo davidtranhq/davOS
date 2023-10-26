@@ -24,10 +24,10 @@ else
 	gdb -ex 'target remote localhost:1234' -ex 'symbol-file $(BIN)' -ex 'b kernel_main'
 endif
 
-test: CPPFLAGS += -DTEST_BUILD
+test: CPPFLAGS += -DTEST_BUILD -DDEBUG_BUILD
 test: qemu
 
-debug-test: CPPFLAGS += -DTEST_BUILD
+debug-test: CPPFLAGS += -DTEST_BUILD -DDEBUG_BUILD
 debug-test: debug
 
 # Build a bootable CD-ROM for the OS

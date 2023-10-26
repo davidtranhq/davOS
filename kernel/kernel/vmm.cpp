@@ -12,6 +12,7 @@ allocate physical frame for PML4 table frame (page tree root)
 #include <kernel/PageTree.h>
 #include <kernel/kernel.h>
 #include <kernel/limine_features.h>
+#include <kernel/macros.h>
 
 extern "C" void load_ptbr(uintptr_t page_table_physical_address);
 
@@ -36,7 +37,16 @@ bool is_essential_mapping(struct limine_memmap_entry *entry)
  */
 void vmm_init()
 {
+#ifdef DEBUG_BUILD
+    DEBUG("Initializing virtual memory manager...\n");
+#endif
+
     auto pml4_table_frame = allocate_frame();
+
+#ifdef DEBUG_BUILD
+    DEBUG("Allocated PML4 table frame at (physical) %p\n", pml4_table_frame);
+#endif
+
     // since paging is already enabled, we need to access the physical frame
     // by its virtual address
     auto virtual_pml4_table_frame = physical_to_limine_virtual(
@@ -47,6 +57,10 @@ void vmm_init()
     // construct the page tree, with space for the root node allocated
     //  at the specified virtual address
     page_tree.emplace(reinterpret_cast<void *>(virtual_pml4_table_frame));
+
+#ifdef DEBUG_BUILD
+    DEBUG("Constructed page tree at (virtual) %p\n", virtual_pml4_table_frame);
+#endif
     
     // copy over essential mappings from the old page table to the new one
     for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
@@ -62,7 +76,12 @@ void vmm_init()
     }
 
     // load page table base register (PTBR) to point to the physical address of the page table
-    load_ptbr(reinterpret_cast<uintptr_t>(pml4_table_frame) << 12);
+    load_ptbr(reinterpret_cast<uintptr_t>(pml4_table_frame));
+
+#ifdef DEBUG_BUILD
+    DEBUG("Loaded PTBR to point to %p\n", pml4_table_frame);
+#endif
+
 }
 
 /**

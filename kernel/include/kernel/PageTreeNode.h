@@ -32,7 +32,7 @@ public:
 
 private:
     // fill with zeros
-    uint64_t entries_[512] = {0};
+    uint64_t entries_[512] = {0x11223344aabbccdd};
 };
 
 #endif

@@ -362,8 +362,8 @@ uint64_t width = terminal_framebuffer->width;
 uint64_t height = terminal_framebuffer->height;
 uint64_t cursor_x = 0;
 uint64_t cursor_y = 0;
-uint64_t max_line_length = 100;
-uint64_t max_lines = 45;
+uint64_t max_line_length = width / (font_width + right_padding);
+uint64_t max_lines = height / (font_height + bottom_padding) - 10;
 
 /**
  * @brief Get the start address of the framebuffer for the terminal.
@@ -381,6 +381,7 @@ void scroll_down(size_t n)
     uint32_t *buffer_start = framebuffer_address();
     uint64_t buffer_size = width * height;
     uint64_t pixels_per_text_line = width * (font_height + bottom_padding);
+    // copy the buffer from line k+n to line k
     for (uint64_t offset = n * pixels_per_text_line; offset < buffer_size; ++offset)
     {
         buffer_start[offset - n * pixels_per_text_line] = buffer_start[offset];

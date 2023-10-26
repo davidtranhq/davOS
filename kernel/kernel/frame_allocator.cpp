@@ -16,6 +16,7 @@
 #include <kernel/frame_allocator.h>
 #include <kernel/kernel.h>
 #include <kernel/limine_features.h>
+#include <kernel/macros.h>
 
 namespace
 {
@@ -65,6 +66,11 @@ public:
     bool full() const noexcept
     {
         return size_ == max_size_;
+    }
+
+    size_t size() const noexcept
+    {
+        return size_;
     }
 
 private:
@@ -172,9 +178,17 @@ void fill_free_stack(
 
 void frame_allocator_init()
 {
+#ifdef DEBUG_BUILD
+    DEBUG("Initializing frame allocator...\n");
+#endif
+
     // count how many frames of memory we can allocate to the user in total 
     // (and hence the max size of the free stack)
     size_t num_allocatable_frames = get_num_allocatable_frames();
+
+#ifdef DEBUG_BUILD
+    DEBUG("Found %d allocatable frames\n", num_allocatable_frames);
+#endif
 
     // the free stack needs enough frames for itself to be able to store (pointers)
     // to all allocatable frames
@@ -186,6 +200,10 @@ void frame_allocator_init()
     // get contiguous frames for the free stack
     uintptr_t free_stack_frames_begin = allocate_initial_contiguous_frames(num_free_stack_frames);
 
+#ifdef DEBUG_BUILD
+    DEBUG("Allocated %d contiguous frames for the free stack\n", num_free_stack_frames);
+#endif
+
     if (!free_stack_frames_begin)
         kernel_panic("not enough contiguous space for the free stack frame allocator");
 
@@ -193,20 +211,35 @@ void frame_allocator_init()
     uintptr_t free_stack_frames_end = free_stack_frames_begin + num_free_stack_frames * frame_size;
 
     // construct the free stack with the allocated memory
-    free_stack.emplace(free_stack_frames_begin, num_free_stack_frames);
+    free_stack.emplace(free_stack_frames_begin, num_allocatable_frames);
 
     // fill the free stack with the allocatable frames
     // (does not include the frames we just allocated for the free stack itself)
     fill_free_stack(free_stack_frames_begin, free_stack_frames_end);
+
+#ifdef DEBUG_BUILD
+    DEBUG("Finished initializing the frame allocator with %d free frames\n", free_stack->size());
+#endif
+
 }
 
 void *allocate_frame()
 {
+// #ifdef DEBUG_BUILD
+//     DEBUG("Trying to allocate frame...\n");
+// #endif
+
     if (free_stack->empty())
         kernel_panic("ran out of physical memory to allocate!");
-    uintptr_t frame = free_stack->top();
+    uintptr_t frame_address = free_stack->top();
     free_stack->pop();
-    return reinterpret_cast<void *>(frame);
+    auto frame_ptr = reinterpret_cast<void *>(frame_address);
+
+// #ifdef DEBUG_BUILD
+//     DEBUG("Allocated frame at %p\n", frame_ptr);
+// #endif
+
+    return frame_ptr;
 }
 
 void *allocate_frame_limine_virtual()
