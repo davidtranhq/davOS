@@ -1,5 +1,5 @@
 # WIP
 
-We are triple faulting after trying to load the newly created page table into the PTBR.
-Either the page table data isn't initialized correctly (likely), we aren't loading the
-correct physical/virtual address of the page table into the PTBR, or something else.
+Paging works: the last step is reclaiming Limine bootloader memory, which requires us to
+finally replace the Limine stack with our own (since the Limine stack is stored in Limine
+bootloader memory)

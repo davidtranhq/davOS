@@ -17,6 +17,11 @@ void *allocate_frame();
 void deallocate_frame(uintptr_t frame_to_deallocate);
 
 /**
+ * @brief Get the number of available frames left. 
+ */
+uint64_t available_frames();
+
+/**
  * @brief Get the virtual address of a physical address based on Limine's initial mapping.
  */
 void *physical_to_limine_virtual(uintptr_t physical_address);
@@ -26,6 +31,6 @@ void *physical_to_limine_virtual(uintptr_t physical_address);
  * (This is safe to do once we've set up our own page tables, since Limine
  * uses bootloader-reclaimable memory for the Limine page tables.
  */
-void reclaim_limine_memory();
+void free_limine_bootloader_memory();
 
 #endif

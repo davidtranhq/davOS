@@ -13,6 +13,7 @@
  */
 enum PageFlags : uint64_t
 {
+    None = 0,
     Write = 1ULL << 1,        // allow writes
     User = 1ULL << 2,         // allow user-mode access
     WriteThrough = 1ULL << 3, // use write-through caching policy
@@ -21,9 +22,9 @@ enum PageFlags : uint64_t
 };
 
 /**
- * @brief Initialize and load the page tree, mapping all frames required 
- * for the kernel to function. Includes the kernel itself and other facilities 
- * like the stack and the framebuffer for printing.
+ * @brief Allocate space for the new page table, and re-map essential mappings
+ * mapped by Limine. Then free the old page table by reclaiming bootloader reclaimable
+ * memory.
  */
 void vmm_init();
 
@@ -42,4 +43,5 @@ void vmm_add_mapping(uintptr_t virtual_base,
                      uint64_t length,
                      PageFlags flags);
 
+uintptr_t vmm_virtual_to_physical(uintptr_t virtual_address);
 #endif

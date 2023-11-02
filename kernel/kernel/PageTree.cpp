@@ -3,6 +3,7 @@
 
 #include <kernel/PageTree.h>
 #include <kernel/kernel.h>
+#include <kernel/macros.h>
 #include <kernel/frame_allocator.h>
 
 /**

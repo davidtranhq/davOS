@@ -32,7 +32,6 @@ void kernel_init()
     terminal_init();
     frame_allocator_init();
     vmm_init();
-    reclaim_limine_memory();
 }
 
 [[ noreturn ]]

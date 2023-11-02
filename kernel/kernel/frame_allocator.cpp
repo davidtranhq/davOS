@@ -93,6 +93,18 @@ bool is_allocatable(struct limine_memmap_entry *entry)
 }
 
 /**
+ * @brief Print the base, limit, and mapping type of each of the initial Limine memory map
+ */
+void print_memory_map()
+{
+    for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
+    {
+        struct limine_memmap_entry *entry = limine::memory_map->entries[i];
+        printf("base: %x, limit: %x, type: %x\n", entry->base, entry->length, entry->type);
+    }
+}
+
+/**
  * @brief Calculate the total number of allocatable frames for use in this system.
  */
 size_t get_num_allocatable_frames()
@@ -101,7 +113,6 @@ size_t get_num_allocatable_frames()
     for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
     {
         struct limine_memmap_entry *entry = limine::memory_map->entries[i];
-        printf("base: %x, limit: %x, type: %x\n", entry->base, entry->length, entry->type);
         if (is_allocatable(entry))
             allocatable_frames += entry->length / frame_size;
     }
@@ -182,6 +193,11 @@ void frame_allocator_init()
     DEBUG("Initializing frame allocator...\n");
 #endif
 
+#ifdef DEBUG_BUILD
+    DEBUG("Limine Memory Map:\n");
+    print_memory_map();
+#endif
+
     // count how many frames of memory we can allocate to the user in total 
     // (and hence the max size of the free stack)
     size_t num_allocatable_frames = get_num_allocatable_frames();
@@ -225,32 +241,18 @@ void frame_allocator_init()
 
 void *allocate_frame()
 {
-// #ifdef DEBUG_BUILD
-//     DEBUG("Trying to allocate frame...\n");
-// #endif
-
     if (free_stack->empty())
         kernel_panic("ran out of physical memory to allocate!");
     uintptr_t frame_address = free_stack->top();
     free_stack->pop();
     auto frame_ptr = reinterpret_cast<void *>(frame_address);
 
-// #ifdef DEBUG_BUILD
-//     DEBUG("Allocated frame at %p\n", frame_ptr);
-// #endif
-
     return frame_ptr;
 }
 
-void *allocate_frame_limine_virtual()
+uint64_t available_frames()
 {
-    auto physical_frame = allocate_frame();
-    auto limine_virtual_frame = physical_to_limine_virtual(
-        reinterpret_cast<uintptr_t>(physical_frame));
-    if (limine_virtual_frame == 0)
-        kernel_panic("allocate_frame_limine_virtual: \
-            frame allocated to unmapped Limine virtual address");
-    return limine_virtual_frame;
+    return free_stack->size();
 }
 
 void deallocate_frame(uintptr_t frame)
@@ -263,8 +265,12 @@ void *physical_to_limine_virtual(uintptr_t physical_address)
     return reinterpret_cast<void *>(physical_address);
 }
 
-void reclaim_limine_memory()
+void free_limine_bootloader_memory()
 {
+#ifdef DEBUG_BUILD
+    uint64_t reclaimed_frames = 0;
+#endif
+
     // add the allocatable frames from each segment to the free stack
     for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
     {
@@ -276,6 +282,16 @@ void reclaim_limine_memory()
         // push the allocatable frames from this segment to the free stack
         uint64_t end_of_entry = entry->base + entry->length;
         for (uintptr_t frame = entry->base; frame < end_of_entry; frame += frame_size)
-            free_stack->push(frame);
+        {
+#ifdef DEBUG_BUILD
+            reclaimed_frames += 1;
+#endif
+            deallocate_frame(frame);
+        }
     }
+
+#ifdef DEBUG_BUILD
+    DEBUG("Reclaimed %d frames of Limine bootloader memory, %d available frames\n",
+          reclaimed_frames, available_frames());
+#endif
 }

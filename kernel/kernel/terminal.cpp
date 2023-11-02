@@ -362,7 +362,7 @@ uint64_t width = terminal_framebuffer->width;
 uint64_t height = terminal_framebuffer->height;
 uint64_t cursor_x = 0;
 uint64_t cursor_y = 0;
-uint64_t max_line_length = width / (font_width + right_padding);
+uint64_t max_line_length = width / (font_width + right_padding) - 10;
 uint64_t max_lines = height / (font_height + bottom_padding) - 10;
 
 /**

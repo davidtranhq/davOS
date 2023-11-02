@@ -119,7 +119,39 @@ void isr_general_protection(IDTStructure::InterruptFrame *frame, uint64_t error_
 __attribute__((interrupt))
 void isr_page_fault(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 {
-    kernel_panic("page fault\n");
+    const char *p_flag_msg = error_code & 1
+        ? "The fault was caused by a page-level protection violation"
+        : "The fault was caused by a non-present page";
+    
+    const char *wr_flag_msg = error_code & 2
+        ? "The access causing the fault was a write"
+        : "The access causing the fault was a read";
+
+    const char *us_flag_msg = error_code & 4
+        ? "A user-mode access caused the fault"
+        : "A supervisor-mode access caused the fault";
+
+    const char *rsvd_flag_msg = error_code & 8
+        ? "The fault was not caused by a reserved bit violation"
+        : "The fault was caused by a reserved bit set to 1 in some paging-structure entry";
+
+    const char *id_flag_msg = error_code & 16
+        ? "The fault was caused by an instruction fetch"
+        : "The fault was not caused by an instruction fetch";
+
+    const char *pk_flag_msg = error_code & 32
+        ? "There was a protection-key violation"
+        : "The fault was not caused by protection keys";
+
+    const char *sgx_flag_msg = error_code & (1ULL << 15)
+        ? "The fault resulted from violation of SGX-specific access-control requirements"
+        : "The fault is not related to SGX";
+
+    kernel_panic(
+        "page fault\n\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
+        p_flag_msg, wr_flag_msg, us_flag_msg, rsvd_flag_msg, id_flag_msg, pk_flag_msg, sgx_flag_msg
+    );
+
 }
 
 __attribute__((interrupt))

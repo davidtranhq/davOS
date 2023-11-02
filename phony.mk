@@ -9,7 +9,7 @@ endif
 ISOROOT = isoroot
 
 qemu: iso
-	qemu-system-x86_64 -cdrom $(ISO)
+	qemu-system-x86_64 -cdrom $(ISO) -d int -no-shutdown -no-reboot
 
 # Run a qemu instance in the background and attach a GDB instance to it
 debug: iso
