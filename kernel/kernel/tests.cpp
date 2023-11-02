@@ -55,7 +55,9 @@ void test_paging()
 {
     printf("running paging test...\n");
     auto new_frame = reinterpret_cast<uintptr_t>(allocate_frame());
-    printf("Allocated physical frame at %p\n", new_frame);
+#ifdef DEBUG_BUILD
+    DEBUG("Allocated physical frame at %p\n", new_frame);
+#endif
     // map two virtual pages to the same frame, see if changes are reflected
     uintptr_t write_vpage = 0x80002000;
     uintptr_t read_vpage = 0x80000000;

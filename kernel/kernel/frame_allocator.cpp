@@ -92,6 +92,7 @@ bool is_allocatable(struct limine_memmap_entry *entry)
     return entry->type == LIMINE_MEMMAP_USABLE;
 }
 
+#ifdef DEBUG_BUILD
 /**
  * @brief Print the base, limit, and mapping type of each of the initial Limine memory map
  */
@@ -103,6 +104,7 @@ void print_memory_map()
         printf("base: %x, limit: %x, type: %x\n", entry->base, entry->length, entry->type);
     }
 }
+#endif
 
 /**
  * @brief Calculate the total number of allocatable frames for use in this system.

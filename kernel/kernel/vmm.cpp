@@ -104,10 +104,7 @@ void vmm_init()
     DEBUG("Loaded PTBR to point to %p\n", pml4_table_frame);
 #endif
 
-    // TODO: before freeing memory, we need to replace the Limine stack (which is stored in
-    // bootloader-reclaimable memory), with our own
-    
-    // free_limine_bootloader_memory();
+    free_limine_bootloader_memory();
 }
 
 /**
