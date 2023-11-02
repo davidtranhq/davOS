@@ -13,5 +13,7 @@ namespace limine
 
 extern struct limine_memmap_response *memory_map;
 extern struct limine_framebuffer_response *framebuffers_info;
+extern struct limine_kernel_address_response *kernel_address;
+extern struct limine_hhdm_response *hhdm_address;
 
 }

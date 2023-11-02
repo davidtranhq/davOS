@@ -8,7 +8,7 @@ void frame_allocator_init();
 /**
  * @brief Get a new physical frame. Returns the physical address of the new frame.
  */
-uintptr_t allocate_frame();
+void *allocate_frame();
 
 /**
  * @brief Frees a previously allocated physical frame. Do not deallocate the same frame twice
@@ -17,8 +17,20 @@ uintptr_t allocate_frame();
 void deallocate_frame(uintptr_t frame_to_deallocate);
 
 /**
+ * @brief Get the number of available frames left. 
+ */
+uint64_t available_frames();
+
+/**
  * @brief Get the virtual address of a physical address based on Limine's initial mapping.
  */
-uintptr_t physical_to_limine_virtual(uintptr_t physical_address);
+void *physical_to_limine_virtual(uintptr_t physical_address);
+
+/**
+ * @brief Reclaim bootloader-reclaimable memory allocated by Limine.
+ * (This is safe to do once we've set up our own page tables, since Limine
+ * uses bootloader-reclaimable memory for the Limine page tables.
+ */
+void free_limine_bootloader_memory();
 
 #endif

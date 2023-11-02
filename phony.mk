@@ -9,7 +9,7 @@ endif
 ISOROOT = isoroot
 
 qemu: iso
-	qemu-system-x86_64 -cdrom $(ISO)
+	qemu-system-x86_64 -cdrom $(ISO) -d int -no-shutdown -no-reboot
 
 # Run a qemu instance in the background and attach a GDB instance to it
 debug: iso
@@ -24,10 +24,10 @@ else
 	gdb -ex 'target remote localhost:1234' -ex 'symbol-file $(BIN)' -ex 'b kernel_main'
 endif
 
-test: CPPFLAGS += -DTEST_BUILD
+test: CPPFLAGS += -DTEST_BUILD -DDEBUG_BUILD
 test: qemu
 
-debug-test: CPPFLAGS += -DTEST_BUILD
+debug-test: CPPFLAGS += -DTEST_BUILD -DDEBUG_BUILD
 debug-test: debug
 
 # Build a bootable CD-ROM for the OS

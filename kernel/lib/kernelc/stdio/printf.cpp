@@ -59,7 +59,35 @@ int vprintf(const char *format, va_list args)
                     return -1;
                 written += len;
             }
-            else if (format[0] == 'x')
+            else if (format[0] == 'd')
+            {
+                format += 1;
+                int num = va_arg(args, int);
+                const int max_num_len = 128;
+                char str[max_num_len] = {0};
+                int str_start = max_num_len - 1;
+                if (num == 0)
+                {
+                    str[str_start] = '0';
+                    str_start -= 1;
+                }
+                else
+                {
+                    while (num > 0)
+                    {
+                        int digit = num % 10;
+                        str[str_start] = digit + '0';
+                        str_start -= 1;
+                        num /= 10;
+                    }
+                }
+                str_start += 1;
+                size_t str_len = max_num_len - str_start;
+                if (!print(str + str_start, str_len))
+                    return -1;
+                written += str_len;
+            }
+            else if (format[0] == 'x' || format[0] == 'p')
             {
                 format += 1;
                 unsigned long long num = va_arg(args, unsigned long long);

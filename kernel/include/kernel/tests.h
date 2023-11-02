@@ -11,4 +11,6 @@ void test_global_constructor();
 
 void test_stack_overflow();
 
+void test_paging();
+
 #endif

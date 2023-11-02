@@ -16,6 +16,7 @@
 #include <kernel/frame_allocator.h>
 #include <kernel/kernel.h>
 #include <kernel/limine_features.h>
+#include <kernel/macros.h>
 
 namespace
 {
@@ -67,6 +68,11 @@ public:
         return size_ == max_size_;
     }
 
+    size_t size() const noexcept
+    {
+        return size_;
+    }
+
 private:
     uintptr_t *stack_ = 0;
     size_t max_size_ = 0;
@@ -83,8 +89,19 @@ constexpr size_t frame_size = 0x1000;
  */
 bool is_allocatable(struct limine_memmap_entry *entry)
 {
-    return entry->type == LIMINE_MEMMAP_USABLE
-        || entry->type ==LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE;
+    return entry->type == LIMINE_MEMMAP_USABLE;
+}
+
+/**
+ * @brief Print the base, limit, and mapping type of each of the initial Limine memory map
+ */
+void print_memory_map()
+{
+    for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
+    {
+        struct limine_memmap_entry *entry = limine::memory_map->entries[i];
+        printf("base: %x, limit: %x, type: %x\n", entry->base, entry->length, entry->type);
+    }
 }
 
 /**
@@ -96,7 +113,6 @@ size_t get_num_allocatable_frames()
     for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
     {
         struct limine_memmap_entry *entry = limine::memory_map->entries[i];
-        printf("base: %x, limit: %x, type: %x\n", entry->base, entry->length, entry->type);
         if (is_allocatable(entry))
             allocatable_frames += entry->length / frame_size;
     }
@@ -173,9 +189,22 @@ void fill_free_stack(
 
 void frame_allocator_init()
 {
+#ifdef DEBUG_BUILD
+    DEBUG("Initializing frame allocator...\n");
+#endif
+
+#ifdef DEBUG_BUILD
+    DEBUG("Limine Memory Map:\n");
+    print_memory_map();
+#endif
+
     // count how many frames of memory we can allocate to the user in total 
     // (and hence the max size of the free stack)
     size_t num_allocatable_frames = get_num_allocatable_frames();
+
+#ifdef DEBUG_BUILD
+    DEBUG("Found %d allocatable frames\n", num_allocatable_frames);
+#endif
 
     // the free stack needs enough frames for itself to be able to store (pointers)
     // to all allocatable frames
@@ -187,6 +216,10 @@ void frame_allocator_init()
     // get contiguous frames for the free stack
     uintptr_t free_stack_frames_begin = allocate_initial_contiguous_frames(num_free_stack_frames);
 
+#ifdef DEBUG_BUILD
+    DEBUG("Allocated %d contiguous frames for the free stack\n", num_free_stack_frames);
+#endif
+
     if (!free_stack_frames_begin)
         kernel_panic("not enough contiguous space for the free stack frame allocator");
 
@@ -194,23 +227,71 @@ void frame_allocator_init()
     uintptr_t free_stack_frames_end = free_stack_frames_begin + num_free_stack_frames * frame_size;
 
     // construct the free stack with the allocated memory
-    free_stack.emplace(free_stack_frames_begin, num_free_stack_frames);
+    free_stack.emplace(free_stack_frames_begin, num_allocatable_frames);
 
     // fill the free stack with the allocatable frames
     // (does not include the frames we just allocated for the free stack itself)
     fill_free_stack(free_stack_frames_begin, free_stack_frames_end);
+
+#ifdef DEBUG_BUILD
+    DEBUG("Finished initializing the frame allocator with %d free frames\n", free_stack->size());
+#endif
+
 }
 
-uintptr_t allocate_frame()
+void *allocate_frame()
 {
     if (free_stack->empty())
         kernel_panic("ran out of physical memory to allocate!");
-    uintptr_t frame = free_stack->top();
+    uintptr_t frame_address = free_stack->top();
     free_stack->pop();
-    return frame;
+    auto frame_ptr = reinterpret_cast<void *>(frame_address);
+
+    return frame_ptr;
+}
+
+uint64_t available_frames()
+{
+    return free_stack->size();
 }
 
 void deallocate_frame(uintptr_t frame)
 {
     free_stack->push(frame);
+}
+
+void *physical_to_limine_virtual(uintptr_t physical_address)
+{
+    return reinterpret_cast<void *>(physical_address);
+}
+
+void free_limine_bootloader_memory()
+{
+#ifdef DEBUG_BUILD
+    uint64_t reclaimed_frames = 0;
+#endif
+
+    // add the allocatable frames from each segment to the free stack
+    for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
+    {
+        struct limine_memmap_entry *entry = limine::memory_map->entries[i];
+        // only reclaim bootloader-reclaimable entries
+        if (entry->type != LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE)
+            continue;
+
+        // push the allocatable frames from this segment to the free stack
+        uint64_t end_of_entry = entry->base + entry->length;
+        for (uintptr_t frame = entry->base; frame < end_of_entry; frame += frame_size)
+        {
+#ifdef DEBUG_BUILD
+            reclaimed_frames += 1;
+#endif
+            deallocate_frame(frame);
+        }
+    }
+
+#ifdef DEBUG_BUILD
+    DEBUG("Reclaimed %d frames of Limine bootloader memory, %d available frames\n",
+          reclaimed_frames, available_frames());
+#endif
 }
