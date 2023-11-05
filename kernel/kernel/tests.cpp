@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <kernel/frame_allocator.h>
+#include <kernel/macros.h>
 #include <kernel/tests.h>
 #include <kernel/vmm.h>
 
