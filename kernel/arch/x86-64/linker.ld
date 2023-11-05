@@ -24,6 +24,8 @@ SECTIONS
     /* Any address in this region will do, but often 0xffffffff80000000 is chosen as */
     /* that is the beginning of the region. */
     . = 0xffffffff80000000;
+
+    kernel_readonly_start = .;
  
     .text : {
         *(.text .text.*)
@@ -49,11 +51,14 @@ SECTIONS
         . += CONSTANT(MAXPAGESIZE);
     } :reserved
 
+    kernel_readonly_end = .;
+    kernel_rw_start = .;
+    
     .stack ALIGN(CONSTANT(MAXPAGESIZE)): {
         . += kernel_stack_size;
     } :data
 
-    stack_start = .;
+    kernel_stack_start = .;
 
     /* .data is on a different page than the stack since the stack is 8-byte aligned */
     .data : {
@@ -65,6 +70,8 @@ SECTIONS
         *(.bss .bss.*)
     } :data
  
+    kernel_rw_end = .;
+
     /* Discard .note.* and .eh_frame since they may cause issues on some hosts. */
     /DISCARD/ : {
         *(.eh_frame)

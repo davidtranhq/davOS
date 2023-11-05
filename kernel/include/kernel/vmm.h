@@ -14,6 +14,7 @@
 enum PageFlags : uint64_t
 {
     None = 0,
+    Present = 1ULL,
     Write = 1ULL << 1,        // allow writes
     User = 1ULL << 2,         // allow user-mode access
     WriteThrough = 1ULL << 3, // use write-through caching policy

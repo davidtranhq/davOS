@@ -38,7 +38,7 @@ void isr_nmi_interrupt(IDTStructure::InterruptFrame *frame)
     kernel_panic("nonmaskable external interrupt\n");
 }
 
-#ifdef TEST_BUILD
+#ifdef INTERRUPT_TEST
 /**
  * @brief The breakpoint interrupt handler is used for testing interrupt handling
  * in the test build.

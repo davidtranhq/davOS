@@ -14,7 +14,7 @@ void *allocate_frame();
  * @brief Frees a previously allocated physical frame. Do not deallocate the same frame twice
  * (the function does not check for this).
  */
-void deallocate_frame(uintptr_t frame_to_deallocate);
+void deallocate_frame(void *frame_to_deallocate);
 
 /**
  * @brief Get the number of available frames left. 
@@ -24,7 +24,7 @@ uint64_t available_frames();
 /**
  * @brief Get the virtual address of a physical address based on Limine's initial mapping.
  */
-void *physical_to_limine_virtual(uintptr_t physical_address);
+uintptr_t kernel_physical_to_virtual(uintptr_t physical_address);
 
 /**
  * @brief Reclaim bootloader-reclaimable memory allocated by Limine.

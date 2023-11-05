@@ -33,12 +33,12 @@ namespace
 class FixedStack
 {
 public:
-    FixedStack(uintptr_t base, size_t max_size) noexcept
-        : stack_ {reinterpret_cast<uintptr_t *>(base)},
+    FixedStack(void *base, size_t max_size) noexcept
+        : stack_ {reinterpret_cast<void **>(base)},
           max_size_ {max_size}
     {}
 
-    void push(uintptr_t frame_pointer) noexcept
+    void push(void *frame_pointer) noexcept
     {
         if (full())
             return;
@@ -53,7 +53,7 @@ public:
         size_ -= 1;
     }
 
-    uintptr_t top() const noexcept
+    void *top() const noexcept
     {
         return stack_[size_ - 1];
     }
@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    uintptr_t *stack_ = 0;
+    void **stack_ = 0;
     size_t max_size_ = 0;
     size_t size_ = 0;
 };
@@ -92,19 +92,17 @@ bool is_allocatable(struct limine_memmap_entry *entry)
     return entry->type == LIMINE_MEMMAP_USABLE;
 }
 
-#ifdef DEBUG_BUILD
 /**
  * @brief Print the base, limit, and mapping type of each of the initial Limine memory map
  */
-void print_memory_map()
-{
-    for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
-    {
-        struct limine_memmap_entry *entry = limine::memory_map->entries[i];
-        printf("base: %x, limit: %x, type: %x\n", entry->base, entry->length, entry->type);
-    }
-}
-#endif
+// void print_memory_map()
+// {
+//     for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
+//     {
+//         struct limine_memmap_entry *entry = limine::memory_map->entries[i];
+//         DEBUG("base: %x, limit: %x, type: %x\n", entry->base, entry->length, entry->type);
+//     }
+// }
 
 /**
  * @brief Calculate the total number of allocatable frames for use in this system.
@@ -182,7 +180,7 @@ void fill_free_stack(
             // do not include frames that were allocated for the free stack
             if (frame >= free_stack_frames_begin && frame < free_stack_frames_end)
                 continue;
-            free_stack->push(frame);
+            free_stack->push(reinterpret_cast<void *>(frame));
         }
     }
 }
@@ -191,22 +189,12 @@ void fill_free_stack(
 
 void frame_allocator_init()
 {
-#ifdef DEBUG_BUILD
     DEBUG("Initializing frame allocator...\n");
-#endif
-
-#ifdef DEBUG_BUILD
-    DEBUG("Limine Memory Map:\n");
-    print_memory_map();
-#endif
 
     // count how many frames of memory we can allocate to the user in total 
     // (and hence the max size of the free stack)
     size_t num_allocatable_frames = get_num_allocatable_frames();
-
-#ifdef DEBUG_BUILD
     DEBUG("Found %d allocatable frames\n", num_allocatable_frames);
-#endif
 
     // the free stack needs enough frames for itself to be able to store (pointers)
     // to all allocatable frames
@@ -217,10 +205,7 @@ void frame_allocator_init()
 
     // get contiguous frames for the free stack
     uintptr_t free_stack_frames_begin = allocate_initial_contiguous_frames(num_free_stack_frames);
-
-#ifdef DEBUG_BUILD
     DEBUG("Allocated %d contiguous frames for the free stack\n", num_free_stack_frames);
-#endif
 
     if (!free_stack_frames_begin)
         kernel_panic("not enough contiguous space for the free stack frame allocator");
@@ -229,15 +214,13 @@ void frame_allocator_init()
     uintptr_t free_stack_frames_end = free_stack_frames_begin + num_free_stack_frames * frame_size;
 
     // construct the free stack with the allocated memory
-    free_stack.emplace(free_stack_frames_begin, num_allocatable_frames);
+    free_stack.emplace(reinterpret_cast<void *>(free_stack_frames_begin), 
+                       num_allocatable_frames);
 
     // fill the free stack with the allocatable frames
     // (does not include the frames we just allocated for the free stack itself)
     fill_free_stack(free_stack_frames_begin, free_stack_frames_end);
-
-#ifdef DEBUG_BUILD
     DEBUG("Finished initializing the frame allocator with %d free frames\n", free_stack->size());
-#endif
 
 }
 
@@ -245,11 +228,9 @@ void *allocate_frame()
 {
     if (free_stack->empty())
         kernel_panic("ran out of physical memory to allocate!");
-    uintptr_t frame_address = free_stack->top();
+    auto frame_address = free_stack->top();
     free_stack->pop();
-    auto frame_ptr = reinterpret_cast<void *>(frame_address);
-
-    return frame_ptr;
+    return frame_address;
 }
 
 uint64_t available_frames()
@@ -257,22 +238,19 @@ uint64_t available_frames()
     return free_stack->size();
 }
 
-void deallocate_frame(uintptr_t frame)
+void deallocate_frame(void *frame)
 {
     free_stack->push(frame);
 }
 
-void *physical_to_limine_virtual(uintptr_t physical_address)
+uintptr_t kernel_physical_to_virtual(uintptr_t physical_address)
 {
-    return reinterpret_cast<void *>(physical_address);
+    return physical_address + limine::hhdm_address->offset;
 }
 
 void free_limine_bootloader_memory()
 {
-#ifdef DEBUG_BUILD
     uint64_t reclaimed_frames = 0;
-#endif
-
     // add the allocatable frames from each segment to the free stack
     for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
     {
@@ -285,15 +263,11 @@ void free_limine_bootloader_memory()
         uint64_t end_of_entry = entry->base + entry->length;
         for (uintptr_t frame = entry->base; frame < end_of_entry; frame += frame_size)
         {
-#ifdef DEBUG_BUILD
             reclaimed_frames += 1;
-#endif
-            deallocate_frame(frame);
+            deallocate_frame(reinterpret_cast<void *>(frame));
         }
     }
 
-#ifdef DEBUG_BUILD
     DEBUG("Reclaimed %d frames of Limine bootloader memory, %d available frames\n",
           reclaimed_frames, available_frames());
-#endif
 }
