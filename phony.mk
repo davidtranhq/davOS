@@ -13,7 +13,7 @@ qemu: iso
 
 # Run a qemu instance in the background and attach a GDB instance to it
 debug: iso
-	qemu-system-x86_64 -cdrom $(ISO) -S -gdb tcp::1234 &
+	qemu-system-x86_64 -cdrom $(ISO) -d int -no-shutdown -no-reboot -S -gdb tcp::1234 &
 ifeq ($(OS), macOS)
 	lldb \
 		-o "target create $(BIN)" \

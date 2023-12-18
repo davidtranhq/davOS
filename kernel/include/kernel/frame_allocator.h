@@ -22,7 +22,12 @@ void deallocate_frame(void *frame_to_deallocate);
 uint64_t available_frames();
 
 /**
- * @brief Get the virtual address of a physical address based on Limine's initial mapping.
+ * @brief Get a pointer pointing to the corresponding virtual address of a physical address.
+ */
+void *kernel_physical_to_virtual(void *physical_address);
+
+/**
+ * @brief Get the virtual address of the given physical kernel address.
  */
 uintptr_t kernel_physical_to_virtual(uintptr_t physical_address);
 

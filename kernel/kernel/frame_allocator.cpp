@@ -243,6 +243,12 @@ void deallocate_frame(void *frame)
     free_stack->push(frame);
 }
 
+void *kernel_physical_to_virtual(void *physical_address)
+{
+    return reinterpret_cast<void *>(
+        kernel_physical_to_virtual(reinterpret_cast<uintptr_t>(physical_address)));
+}
+
 uintptr_t kernel_physical_to_virtual(uintptr_t physical_address)
 {
     return physical_address + limine::hhdm_address->offset;

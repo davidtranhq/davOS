@@ -15,6 +15,8 @@ allocate physical frame for PML4 table frame (page tree root)
 #include <kernel/macros.h>
 #include <kernel/types.h>
 
+#include <string.h>
+
 extern "C" void load_ptbr(uintptr_t page_table_physical_address);
 
 #define PAGE_SIZE 0x1000
@@ -47,10 +49,11 @@ const char *limine_memmap_type(int type)
 
 void add_initial_mappings()
 {
+    // add initial 4 GiB identity map
+    vmm_add_mapping(0x1000, 0x1000, 0x100000000, PageFlags::Write);
 
     // add 4 GiB HHDM map
     vmm_add_mapping(limine::hhdm_address->offset, 0x0, 0x100000000, PageFlags::Write);
-    DEBUG("Mapped HHDM.\n");
 
     // add kernel mapping (readonly section)
     uint64_t kernel_readonly_length = &kernel_readonly_end - &kernel_readonly_start;
@@ -69,23 +72,6 @@ void add_initial_mappings()
                     kernel_rw_length,
                     PageFlags::Write);
     DEBUG("Mapped read/write kernel section.\n");
-
-    // add memory-map mappings from the limine_memmap feature
-    // for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
-    // {
-    //     struct limine_memmap_entry *entry = limine::memory_map->entries[i];
-    //     if (entry->type != LIMINE_MEMMAP_USABLE && entry->type != LIMINE_MEMMAP_FRAMEBUFFER )
-    //         continue;
-
-    //     PageFlags flags = PageFlags::Write;
-    //     auto virtual_base = reinterpret_cast<uintptr_t>(
-    //         physical_to_limine_virtual(entry->base));
-    //     vmm_add_mapping(virtual_base, entry->base, entry->length, flags);
-    //     DEBUG("Mapped %s section (identity).\n", limine_memmap_type(entry->type));
-    //     vmm_add_mapping(virtual_base + limine::hhdm_address->offset,
-    //                     entry->base, entry->length, flags);
-    //     DEBUG("Mapped %s section (HHDM).\n", limine_memmap_type(entry->type));
-    // }
 }
 
 void vmm_init()
@@ -116,15 +102,18 @@ void vmm_init()
 
     // since paging is already enabled, we need to access the physical frame
     // by its virtual address
-    auto virtual_pml4_table_frame = kernel_physical_to_virtual(
-        reinterpret_cast<uintptr_t>(pml4_table_frame));
+    auto virtual_pml4_table_frame = kernel_physical_to_virtual(pml4_table_frame);
 
     // construct the page tree, with space for the root node allocated
     //  at the specified virtual address
-    page_tree.emplace(reinterpret_cast<void *>(virtual_pml4_table_frame));
+    page_tree.emplace(virtual_pml4_table_frame);
     DEBUG("Constructed page tree at (virtual) %p\n", virtual_pml4_table_frame);
-
+    
+    
     add_initial_mappings();
+    char *before_page_table = reinterpret_cast<char *>(pml4_table_frame) - 20;
+    memcpy(before_page_table, "david tran", 13);
+    DEBUG("Added initial mappings.\n");
 
     // load page table base register (PTBR) to point to the physical address of the page table
     load_ptbr(reinterpret_cast<uintptr_t>(pml4_table_frame));
@@ -162,7 +151,7 @@ void vmm_add_mapping(uintptr_t virtual_base,
     // account for overflow
     if (last_page < first_page)
     {
-        last_page = UINT64_MAX;
+        last_page = page_floor(UINT64_MAX);
     }
     // address of the first and last frames containing the virtual memory region 
     uint64_t first_frame = page_floor(physical_base);
