@@ -118,17 +118,5 @@ enable_paging:
 ```
 When the instruction pointer points to `0x1000p`, paging is disabled, so the value in the IP is a physical address. But, once paging is enabled, the address pointed to by the IP becomes a virtual address. If the identity mapping were not loaded into the page table, an attempt by the CPU to read from `0x1001` (after incrementing the IP from `0x1000`) would result in a page fault, since `0x1001` is not mapped to a physical address. With the identity mapping, `0x1001` correctly maps to `0x1001p`, and the CPU can safely read subsequent instructions (later jumping to the kernel located in the higher half of virtual memory).
 
-## Replacing Limine's Page Tables
 
-The Limine bootloader page tables serve the purpose of entering Protected Mode and intiailizing the higher-half kernel. We replace them with our own to:
-
-1. Reclaim memory used by the bootloader that is no longer needed
-2. Make it easier to manage the page table ourselves when we want to add new entries to it
-
-Replacing the page tables with our own involves:
-1. Initializing the page directory and page tables in memory that map:
-    * all kernel frames
-    * frame(s) containing the stack and other frames containing data needed by the kernel
-    * any other memory-mapped pages initialized in Limine's page tables that we might want to keep (e.g. the page mapping the Limine terminal to the physical framebuffer)
-2. Load the location of the new page directory into the `cr3` register
 

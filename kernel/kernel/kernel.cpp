@@ -7,6 +7,7 @@
 #include <kernel/idt.h>
 #include <kernel/kernel.h>
 #include <kernel/terminal.h>
+#include <kernel/types.h>
 #include <kernel/vmm.h>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();

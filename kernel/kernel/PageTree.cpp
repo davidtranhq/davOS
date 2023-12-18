@@ -3,6 +3,7 @@
 
 #include <kernel/PageTree.h>
 #include <kernel/kernel.h>
+#include <kernel/limine_features.h>
 #include <kernel/macros.h>
 #include <kernel/frame_allocator.h>
 
@@ -49,19 +50,23 @@ void PageTree::map_page_to_frame(uint64_t page, uint64_t frame, PageFlags flags)
     for (int depth = 0; depth < max_depth; ++depth)
     {
         auto child_index = get_table_index(page, depth);
-        auto next = reinterpret_cast<PageTreeNode *>(curr->get_child_address(child_index));
+        auto child_address = curr->get_child_address(child_index);
+        auto next = reinterpret_cast<PageTreeNode *>(kernel_physical_to_virtual(child_address));
         // allocate a new node for the next level if unallocated
-        if (!next)
+        if (next == kernel_physical_to_virtual(nullptr))
         {
             auto new_node_frame = allocate_frame();
-            auto new_node_frame_virtual = physical_to_limine_virtual(
-                reinterpret_cast<uintptr_t>(new_node_frame));
+            auto new_node_frame_virtual = kernel_physical_to_virtual(new_node_frame);
             // construct the new page tree node at the given address
-            auto new_node = new(new_node_frame_virtual) PageTreeNode;
-            curr->set_child_address(child_index, reinterpret_cast<uintptr_t>(new_node));
-            curr->add_child_flags(child_index, flags);
-            next = reinterpret_cast<PageTreeNode *>(new_node_frame);
+            new(new_node_frame_virtual) PageTreeNode;
+            // use the physical frame address here: the page table uses physical addresses
+            curr->set_child_address(child_index, reinterpret_cast<uintptr_t>(new_node_frame));
+            curr->set_child_flags(child_index, flags);
+            next = reinterpret_cast<PageTreeNode *>(new_node_frame_virtual);
         }
+        // append child flags, don't clear and set them since other pages deeper in the tree
+        // may depend on previously set flags
+        curr->set_child_flags(child_index, flags);
         // move to the next depth
         curr = next;
     }
@@ -69,5 +74,5 @@ void PageTree::map_page_to_frame(uint64_t page, uint64_t frame, PageFlags flags)
     // set the address and flags of the physical frame in the page table
     auto child_index = get_table_index(page, max_depth);
     curr->set_child_address(child_index, frame);
-    curr->add_child_flags(child_index, flags);
+    curr->set_child_flags(child_index, flags);
 }

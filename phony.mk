@@ -13,7 +13,7 @@ qemu: iso
 
 # Run a qemu instance in the background and attach a GDB instance to it
 debug: iso
-	qemu-system-x86_64 -cdrom $(ISO) -S -gdb tcp::1234 &
+	qemu-system-x86_64 -cdrom $(ISO) -d int -no-shutdown -no-reboot -S -gdb tcp::1234 &
 ifeq ($(OS), macOS)
 	lldb \
 		-o "target create $(BIN)" \
@@ -24,11 +24,12 @@ else
 	gdb -ex 'target remote localhost:1234' -ex 'symbol-file $(BIN)' -ex 'b kernel_main'
 endif
 
-test: CPPFLAGS += -DTEST_BUILD -DDEBUG_BUILD
+# run with DEBUG flags but don't attach a debugger
+test: CPPFLAGS += -DDEBUG_BUILD
 test: qemu
 
-debug-test: CPPFLAGS += -DTEST_BUILD -DDEBUG_BUILD
-debug-test: debug
+debug: CPPFLAGS += -DDEBUG_BUILD
+debug: debug
 
 # Build a bootable CD-ROM for the OS
 iso: $(BIN)

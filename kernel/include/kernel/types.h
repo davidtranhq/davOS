@@ -8,6 +8,6 @@
  * mistake of accidentally reading the garbage stored at the address. It can only be used
  * as a pointer type.
  */
-using LinkerAddress = char[];
+using LinkerAddress = char;
 
 #endif

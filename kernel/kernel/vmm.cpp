@@ -13,22 +13,65 @@ allocate physical frame for PML4 table frame (page tree root)
 #include <kernel/kernel.h>
 #include <kernel/limine_features.h>
 #include <kernel/macros.h>
+#include <kernel/types.h>
+
+#include <string.h>
 
 extern "C" void load_ptbr(uintptr_t page_table_physical_address);
 
 #define PAGE_SIZE 0x1000
 #define FRAME_SIZE 0x1000
 
+// virtual address locations of the readonly and read/write boundaries
+// of the kernel: specified by the linker
+extern LinkerAddress kernel_readonly_start,
+                     kernel_readonly_end,
+                     kernel_rw_start,
+                     kernel_rw_end;
+
 frg::optional<PageTree> page_tree;
 
-/**
- * @brief Check if an entry in the Limine memory map must be mapped in the page tables.
- */
-bool is_essential_mapping(struct limine_memmap_entry *entry)
+const char *limine_memmap_type(int type)
 {
-    return entry->type == LIMINE_MEMMAP_KERNEL_AND_MODULES
-        || entry->type == LIMINE_MEMMAP_FRAMEBUFFER
-        || entry->type == LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE;
+    switch (type)
+    {
+    case 0: return "USABLE";
+    case 1: return "RESERVED";
+    case 2: return "ACPI_RECLAIMABLE";
+    case 3: return "ACPI_NVS";
+    case 4: return "BAD_MEMORY";
+    case 5: return "BOOTLOADER_RECLAIMABLE";
+    case 6: return "KERNEL_AND_MODULES";
+    case 7: return "FRAMEBUFFER";
+    default: return "unknown";
+    }
+}
+
+void add_initial_mappings()
+{
+    // add initial 4 GiB identity map
+    vmm_add_mapping(0x1000, 0x1000, 0x100000000, PageFlags::Write);
+
+    // add 4 GiB HHDM map
+    vmm_add_mapping(limine::hhdm_address->offset, 0x0, 0x100000000, PageFlags::Write);
+
+    // add kernel mapping (readonly section)
+    uint64_t kernel_readonly_length = &kernel_readonly_end - &kernel_readonly_start;
+    uintptr_t kernel_readonly_start_physical = limine::kernel_address->physical_base;
+    vmm_add_mapping(reinterpret_cast<uintptr_t>(&kernel_readonly_start),
+                    kernel_readonly_start_physical,
+                    kernel_readonly_length,
+                    PageFlags::None);
+    DEBUG("Mapped read-only kernel section.\n");
+
+    // add kernel mapping (read/write section)
+    uint64_t kernel_rw_length = &kernel_rw_end - &kernel_rw_start;
+    uintptr_t kernel_rw_start_physical = kernel_readonly_start_physical + kernel_readonly_length;
+    vmm_add_mapping(reinterpret_cast<uintptr_t>(&kernel_rw_start),
+                    kernel_rw_start_physical,
+                    kernel_rw_length,
+                    PageFlags::Write);
+    DEBUG("Mapped read/write kernel section.\n");
 }
 
 void vmm_init()
@@ -51,58 +94,30 @@ void vmm_init()
      * 
      */
 
-#ifdef DEBUG_BUILD
     DEBUG("Initializing virtual memory manager...\n");
-#endif
 
     // allocate memory for the root of the page tree
     auto pml4_table_frame = allocate_frame();
-
-#ifdef DEBUG_BUILD
     DEBUG("Allocated PML4 table frame at (physical) %p\n", pml4_table_frame);
-#endif
 
     // since paging is already enabled, we need to access the physical frame
     // by its virtual address
-    auto virtual_pml4_table_frame = physical_to_limine_virtual(
-        reinterpret_cast<uintptr_t>(pml4_table_frame));
-    
+    auto virtual_pml4_table_frame = kernel_physical_to_virtual(pml4_table_frame);
+
     // construct the page tree, with space for the root node allocated
     //  at the specified virtual address
-    page_tree.emplace(reinterpret_cast<void *>(virtual_pml4_table_frame));
-
-#ifdef DEBUG_BUILD
+    page_tree.emplace(virtual_pml4_table_frame);
     DEBUG("Constructed page tree at (virtual) %p\n", virtual_pml4_table_frame);
-#endif
     
-    // add initial 4 GiB identity map
-    vmm_add_mapping(0x1000, 0x1000, 0x100000000, PageFlags::Write);
-
-    // add 4 GiB HHDM map
-    vmm_add_mapping(limine::hhdm_address->offset, 0x0, 0x100000000, PageFlags::Write);
-
-    // add kernel mapping
-    vmm_add_mapping(limine::kernel_address->virtual_base, limine::kernel_address->physical_base,
-                    0x100000000, PageFlags::None);
-
-    // add memory-map mappings from the limine_memmap feature
-    for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
-    {
-        struct limine_memmap_entry *entry = limine::memory_map->entries[i];
-        PageFlags flags = PageFlags::Write;
-        auto virtual_base = reinterpret_cast<uintptr_t>(
-            physical_to_limine_virtual(entry->base));
-        vmm_add_mapping(virtual_base, entry->base, entry->length, flags);
-        vmm_add_mapping(virtual_base + limine::hhdm_address->offset,
-            entry->base, entry->length, flags);
-    }
+    
+    add_initial_mappings();
+    char *before_page_table = reinterpret_cast<char *>(pml4_table_frame) - 20;
+    memcpy(before_page_table, "david tran", 13);
+    DEBUG("Added initial mappings.\n");
 
     // load page table base register (PTBR) to point to the physical address of the page table
     load_ptbr(reinterpret_cast<uintptr_t>(pml4_table_frame));
-
-#ifdef DEBUG_BUILD
     DEBUG("Loaded PTBR to point to %p\n", pml4_table_frame);
-#endif
 
     free_limine_bootloader_memory();
 }
@@ -115,6 +130,16 @@ uint64_t page_floor(uint64_t address)
     return address - (address % PAGE_SIZE);
 }
 
+/**
+ * @brief Round the address up to the nearest page.
+ */
+uint64_t page_ceil(uint64_t address)
+{
+    if (address % PAGE_SIZE == 0)
+        return address;
+    return page_floor(address + PAGE_SIZE);
+}
+
 void vmm_add_mapping(uintptr_t virtual_base,
                      uintptr_t physical_base,
                      uint64_t length,
@@ -122,7 +147,7 @@ void vmm_add_mapping(uintptr_t virtual_base,
 {
     // addresss of the first and last page containing the virtual memory region
     uint64_t first_page = page_floor(virtual_base);
-    uint64_t last_page = page_floor(virtual_base + length);
+    uint64_t last_page = page_ceil(virtual_base + length);
     // account for overflow
     if (last_page < first_page)
     {
@@ -137,10 +162,8 @@ void vmm_add_mapping(uintptr_t virtual_base,
         page_tree->map_page_to_frame(page, frame, flags);
     }
 
-#ifdef DEBUG_BUILD
     uint64_t num_pages = (last_page - first_page) / PAGE_SIZE;
     DEBUG("Mapped %d virtual page(s) %x to %x (end-exclusive) to %d "
           "physical frame(s) starting at %x. %d physical frames left.\n",
           num_pages, first_page, last_page, num_pages, first_frame, available_frames());
-#endif
 }

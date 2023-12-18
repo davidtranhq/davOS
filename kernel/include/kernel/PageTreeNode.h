@@ -23,12 +23,20 @@ public:
     void set_child_address(int index, uintptr_t address);
 
     /**
-     * @brief Set the flags of a specific entry
+     * @brief Add to the flags of a specific entry
      * 
      * @param index 0-511: the index of the child
      * @param flags 
      */
     void add_child_flags(int index, PageFlags flags);
+
+    /**
+     * @brief Set the flags of a specific entry 
+     * 
+     * @param index 0-511: the index of the child
+     * @param flags
+     */
+    void set_child_flags(int index, PageFlags flags);
 
 private:
     // fill with zeros
