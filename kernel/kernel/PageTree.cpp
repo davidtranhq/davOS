@@ -53,7 +53,7 @@ void PageTree::map_page_to_frame(uint64_t page, uint64_t frame, PageFlags flags)
         auto child_address = curr->get_child_address(child_index);
         auto next = reinterpret_cast<PageTreeNode *>(kernel_physical_to_virtual(child_address));
         // allocate a new node for the next level if unallocated
-        if (next == kernel_physical_to_virtual(nullptr))
+        if (!child_address)
         {
             auto new_node_frame = allocate_frame();
             auto new_node_frame_virtual = kernel_physical_to_virtual(new_node_frame);
