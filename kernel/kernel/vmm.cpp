@@ -131,11 +131,15 @@ uint64_t page_floor(uint64_t address)
 }
 
 /**
- * @brief Round the address up to the nearest page.
+ * @brief Round the address up to the nearest page,
+ * or down if the nearest page would cause an overflow.
  */
 uint64_t page_ceil(uint64_t address)
 {
     if (address % PAGE_SIZE == 0)
+        return address;
+    // check for overflow
+    if (UINT64_MAX - PAGE_SIZE < address)
         return address;
     return page_floor(address + PAGE_SIZE);
 }
@@ -146,13 +150,13 @@ void vmm_add_mapping(uintptr_t virtual_base,
                      PageFlags flags)
 {
     // addresss of the first and last page containing the virtual memory region
-    uint64_t first_page = page_floor(virtual_base);
-    uint64_t last_page = page_ceil(virtual_base + length);
-    // account for overflow
-    if (last_page < first_page)
-    {
-        last_page = page_floor(UINT64_MAX);
-    }
+    const uint64_t first_page = page_floor(virtual_base);
+    const uint64_t last_page = [&]{
+        // check for overflow
+        if (page_floor(UINT64_MAX) - length < virtual_base)
+            return page_floor(UINT64_MAX);
+        return page_ceil(virtual_base + length);
+    }();
     // address of the first and last frames containing the virtual memory region 
     uint64_t first_frame = page_floor(physical_base);
     for (uint64_t page = first_page, frame = first_frame;
