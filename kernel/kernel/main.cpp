@@ -7,6 +7,8 @@
 #include <kernel/tests.h>
 #include <kernel/types.h> // LinkerAddress
 
+#include <kernel/frame_allocator.h>
+
 extern LinkerAddress kernel_stack_start;
 
 [[ noreturn ]]
@@ -19,6 +21,7 @@ void kernel_main()
     run_all_tests();
     
     printf("Hello, world!\n");
+    print_memory_map();
 
     kernel_hang();
 }

@@ -44,5 +44,4 @@ void vmm_add_mapping(uintptr_t virtual_base,
                      uint64_t length,
                      PageFlags flags);
 
-uintptr_t vmm_virtual_to_physical(uintptr_t virtual_address);
 #endif

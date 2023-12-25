@@ -3,39 +3,44 @@
 
 #include <stdint.h>
 
-void frame_allocator_init();
+auto frame_allocator_init() -> void;
 
 /**
  * @brief Get a new physical frame. Returns the physical address of the new frame.
  */
-void *allocate_frame();
+auto allocate_frame() -> void *;
 
 /**
  * @brief Frees a previously allocated physical frame. Do not deallocate the same frame twice
  * (the function does not check for this).
  */
-void deallocate_frame(void *frame_to_deallocate);
+auto deallocate_frame(void *frame_to_deallocate) -> void;
 
 /**
  * @brief Get the number of available frames left. 
  */
-uint64_t available_frames();
+auto available_frames() -> uint64_t;
 
 /**
  * @brief Get a pointer pointing to the corresponding virtual address of a physical address.
  */
-void *kernel_physical_to_virtual(void *physical_address);
+auto kernel_physical_to_virtual(void *physical_address) -> void *;
 
 /**
  * @brief Get the virtual address of the given physical kernel address.
  */
-uintptr_t kernel_physical_to_virtual(uintptr_t physical_address);
+auto kernel_physical_to_virtual(uintptr_t physical_address) -> uintptr_t;
 
 /**
  * @brief Reclaim bootloader-reclaimable memory allocated by Limine.
  * (This is safe to do once we've set up our own page tables, since Limine
  * uses bootloader-reclaimable memory for the Limine page tables.
  */
-void free_limine_bootloader_memory();
+auto free_limine_bootloader_memory() -> void;
+
+/**
+ * @brief Print the base, limit, and mapping type of each of the initial Limine memory map
+ */
+auto print_memory_map() -> void;
 
 #endif

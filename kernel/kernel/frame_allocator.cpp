@@ -93,18 +93,6 @@ bool is_allocatable(struct limine_memmap_entry *entry)
 }
 
 /**
- * @brief Print the base, limit, and mapping type of each of the initial Limine memory map
- */
-// void print_memory_map()
-// {
-//     for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
-//     {
-//         struct limine_memmap_entry *entry = limine::memory_map->entries[i];
-//         DEBUG("base: %x, limit: %x, type: %x\n", entry->base, entry->length, entry->type);
-//     }
-// }
-
-/**
  * @brief Calculate the total number of allocatable frames for use in this system.
  */
 size_t get_num_allocatable_frames()
@@ -276,4 +264,30 @@ void free_limine_bootloader_memory()
 
     DEBUG("Reclaimed %d frames of Limine bootloader memory, %d available frames\n",
           reclaimed_frames, available_frames());
+}
+
+const char *limine_memmap_type(int type)
+{
+    switch (type)
+    {
+    case 0: return "USABLE";
+    case 1: return "RESERVED";
+    case 2: return "ACPI_RECLAIMABLE";
+    case 3: return "ACPI_NVS";
+    case 4: return "BAD_MEMORY";
+    case 5: return "BOOTLOADER_RECLAIMABLE";
+    case 6: return "KERNEL_AND_MODULES";
+    case 7: return "FRAMEBUFFER";
+    default: return "unknown";
+    }
+}
+
+void print_memory_map()
+{
+    for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
+    {
+        struct limine_memmap_entry *entry = limine::memory_map->entries[i];
+        printf("base: %x, limit: %x, type: %s\n", entry->base, entry->length,
+            limine_memmap_type(entry->type));
+    }
 }

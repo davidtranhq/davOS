@@ -31,22 +31,6 @@ extern LinkerAddress kernel_readonly_start,
 
 frg::optional<PageTree> page_tree;
 
-const char *limine_memmap_type(int type)
-{
-    switch (type)
-    {
-    case 0: return "USABLE";
-    case 1: return "RESERVED";
-    case 2: return "ACPI_RECLAIMABLE";
-    case 3: return "ACPI_NVS";
-    case 4: return "BAD_MEMORY";
-    case 5: return "BOOTLOADER_RECLAIMABLE";
-    case 6: return "KERNEL_AND_MODULES";
-    case 7: return "FRAMEBUFFER";
-    default: return "unknown";
-    }
-}
-
 void add_initial_mappings()
 {
     // add initial 4 GiB identity map
