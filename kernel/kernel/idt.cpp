@@ -1,12 +1,17 @@
 #include <string.h>
 
+#include <kernel/constants.h>
+#include <kernel/frame_allocator.h>
 #include <kernel/idt.h>
 #include <kernel/IDTStructure.h>
-#include <kernel/TableDescriptor.h>
 #include <kernel/kernel.h>
+#include <kernel/paging.h>
 #include <kernel/SegmentSelector.h>
+#include <kernel/TableDescriptor.h>
 
 #include <frg/array.hpp> // std::size
+
+#include <stdio.h>
 
 #ifdef TEST_BUILD
 #include <stdio.h>
@@ -119,39 +124,42 @@ void isr_general_protection(IDTStructure::InterruptFrame *frame, uint64_t error_
 __attribute__((interrupt))
 void isr_page_fault(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 {
-    const char *p_flag_msg = error_code & 1
-        ? "The fault was caused by a page-level protection violation"
-        : "The fault was caused by a non-present page";
+    // const char *p_flag_msg = error_code & 1
+    //     ? "The fault was caused by a page-level protection violation"
+    //     : "The fault was caused by a non-present page";
     
-    const char *wr_flag_msg = error_code & 2
-        ? "The access causing the fault was a write"
-        : "The access causing the fault was a read";
+    // const char *wr_flag_msg = error_code & 2
+    //     ? "The access causing the fault was a write"
+    //     : "The access causing the fault was a read";
 
-    const char *us_flag_msg = error_code & 4
-        ? "A user-mode access caused the fault"
-        : "A supervisor-mode access caused the fault";
+    // const char *us_flag_msg = error_code & 4
+    //     ? "A user-mode access caused the fault"
+    //     : "A supervisor-mode access caused the fault";
 
-    const char *rsvd_flag_msg = error_code & 8
-        ? "The fault was not caused by a reserved bit violation"
-        : "The fault was caused by a reserved bit set to 1 in some paging-structure entry";
+    // const char *rsvd_flag_msg = error_code & 8
+    //     ? "The fault was not caused by a reserved bit violation"
+    //     : "The fault was caused by a reserved bit set to 1 in some paging-structure entry";
 
-    const char *id_flag_msg = error_code & 16
-        ? "The fault was caused by an instruction fetch"
-        : "The fault was not caused by an instruction fetch";
+    // const char *id_flag_msg = error_code & 16
+    //     ? "The fault was caused by an instruction fetch"
+    //     : "The fault was not caused by an instruction fetch";
 
-    const char *pk_flag_msg = error_code & 32
-        ? "There was a protection-key violation"
-        : "The fault was not caused by protection keys";
+    // const char *pk_flag_msg = error_code & 32
+    //     ? "There was a protection-key violation"
+    //     : "The fault was not caused by protection keys";
 
-    const char *sgx_flag_msg = error_code & (1ULL << 15)
-        ? "The fault resulted from violation of SGX-specific access-control requirements"
-        : "The fault is not related to SGX";
+    // const char *sgx_flag_msg = error_code & (1ULL << 15)
+    //     ? "The fault resulted from violation of SGX-specific access-control requirements"
+    //     : "The fault is not related to SGX";
 
-    kernel_panic(
-        "page fault\n\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
-        p_flag_msg, wr_flag_msg, us_flag_msg, rsvd_flag_msg, id_flag_msg, pk_flag_msg, sgx_flag_msg
-    );
+    // kernel_panic(
+    //     "page fault\n\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
+    //     p_flag_msg, wr_flag_msg, us_flag_msg, rsvd_flag_msg, id_flag_msg, pk_flag_msg, sgx_flag_msg
+    // );
 
+    auto faulting_address = uintptr_t {};
+    asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
+    paging_allocate_and_map(faulting_address, page_size, PageFlags::Write);
 }
 
 __attribute__((interrupt))

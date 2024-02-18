@@ -13,4 +13,6 @@ void test_stack_overflow();
 
 void test_paging();
 
+void test_free_list_allocator();
+
 #endif
