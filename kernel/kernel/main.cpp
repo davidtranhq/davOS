@@ -21,7 +21,7 @@ void kernel_main()
     run_all_tests();
     
     printf("Hello, world!\n");
-    print_memory_map();
+    // print_memory_map();
 
     kernel_hang();
 }

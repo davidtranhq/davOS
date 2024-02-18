@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include <kernel/vmm.h>
+#include <kernel/paging.h>
 
 class PageTreeNode
 {

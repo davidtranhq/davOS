@@ -2,10 +2,13 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <frg/utility.hpp>
+#include <kernel/Allocator.h>
 #include <kernel/frame_allocator.h>
+#include <kernel/FreeListAllocator.h>
 #include <kernel/macros.h>
 #include <kernel/tests.h>
-#include <kernel/vmm.h>
+#include <kernel/paging.h>
 
 namespace
 {
@@ -62,8 +65,8 @@ void test_paging()
     // map two virtual pages to the same frame, see if changes are reflected
     uintptr_t write_vpage = 0x80002000;
     uintptr_t read_vpage = 0x80000000;
-    vmm_add_mapping(write_vpage, new_frame, 0x1000, PageFlags::Write);
-    vmm_add_mapping(read_vpage, new_frame, 0x1000, PageFlags::Write);
+    paging_add_mapping(write_vpage, new_frame, 0x1000, PageFlags::Write);
+    paging_add_mapping(read_vpage, new_frame, 0x1000, PageFlags::Write);
     uint32_t *write_ptr = reinterpret_cast<uint32_t *>(write_vpage);
     uint32_t *read_ptr = reinterpret_cast<uint32_t *>(read_vpage);
     uint32_t test_value = 0xabcd1234;
@@ -77,7 +80,24 @@ void test_paging()
         printf("paging test: FAILED\n");
         printf("read %d at %p, expected %d\n", *read_ptr, new_frame, test_value);
     }
+}
+
+template <typename Alloc>
+auto test_allocator() -> void {
+    auto allocator = Alloc {};
+    const auto free_regions = paging_get_initial_free_regions();
+    const auto free_region = free_regions[0];
+    constexpr auto free_region_max_size = size_t {0x1000};
+    allocator.add_memory(reinterpret_cast<Alloc::value_type *>(free_region.base),
+        frg::min(free_region.size, free_region_max_size));
     
+    const auto p1 = allocator.allocate(0x20);
+    const auto p2 = allocator.allocate(0x30);
+    const auto p3 = allocator.allocate(0x50);
+
+    allocator.deallocate(p3);
+    allocator.deallocate(p2);
+    allocator.deallocate(p1);
 }
 
 void run_all_tests()
@@ -90,6 +110,7 @@ void run_all_tests()
     // test_interrupt_handling();
     // test_stack_smash();
     test_paging();
+    test_allocator<FreeListAllocator<char>>();
     printf("\nPASSED ALL TESTS\n");
     printf("=========================\n\n");
 }

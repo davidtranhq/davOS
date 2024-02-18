@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 #include <frg/optional.hpp>
+#include <kernel/constants.h>
 #include <kernel/frame_allocator.h>
 #include <kernel/kernel.h>
 #include <kernel/limine_features.h>
@@ -80,9 +81,6 @@ private:
 };
 
 frg::optional<FixedStack> free_stack;
-
-// The size of the physical frames in bytes
-constexpr size_t frame_size = 0x1000;
 
 /**
  * @brief Check if an entry in the Limine memory map is allocatable (available for use)
