@@ -76,3 +76,25 @@ void PageTree::map_page_to_frame(uint64_t page, uint64_t frame, PageFlags flags)
     curr->set_child_address(child_index, frame);
     curr->set_child_flags(child_index, flags);
 }
+
+auto PageTree::get_translation(uint64_t virtual_address) -> PageTranslation
+{
+    PageTreeNode *curr = root_;
+    const int max_depth = 3;
+    for (int depth = 0; depth < max_depth; ++depth)
+    {
+        auto child_index = get_table_index(virtual_address, depth);
+        auto child_address = curr->get_child_address(child_index);
+        auto next = reinterpret_cast<PageTreeNode *>(kernel_physical_to_virtual(child_address));
+        if (!child_address)
+        {
+            return PageTranslation {0, PageFlags::None};
+        }
+        curr = next;
+    }
+
+    auto child_index = get_table_index(virtual_address, max_depth);
+    auto frame_address = curr->get_child_address(child_index);
+    auto flags = curr->get_child_flags(child_index);
+    return PageTranslation {frame_address, flags};
+}

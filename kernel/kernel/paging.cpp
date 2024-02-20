@@ -6,8 +6,8 @@ allocate physical frame for PML4 table frame (page tree root)
 
 */
 
-// #include <dav/algorithm.hpp>
-#include <frg/optional.hpp>
+#include <dav/algorithm.hpp>
+#include <dav/optional.hpp>
 #include <kernel/constants.h>
 #include <kernel/paging.h>
 #include <kernel/frame_allocator.h>
@@ -30,8 +30,7 @@ extern LinkerAddress kernel_readonly_start,
                      kernel_rw_end;
 
 
-
-static frg::optional<PageTree> page_tree;
+static dav::optional<PageTree> page_tree;
 
 struct Mapping {
     MemoryRegion from_virtual {};
@@ -39,7 +38,7 @@ struct Mapping {
     PageFlags flags {};
 };
 
-static auto initial_mappings = frg::array<Mapping, 4> {{
+static auto initial_mappings = dav::array<Mapping, 4> {{
     {
         // 4 GiB identity map
         .from_virtual {0x1000, 0x100000000},
@@ -67,6 +66,21 @@ static auto initial_mappings = frg::array<Mapping, 4> {{
             + (&kernel_readonly_end - &kernel_readonly_start)},
         .flags {PageFlags::Write}
     }
+}};
+
+/**
+ * @brief Virtual ranges that are either already in use, or can't be addressed.
+ */
+static auto unavailable_virtual_memory_ranges = dav::array<MemoryRegion, initial_mappings.size() + 1> {{
+    initial_mappings[0].from_virtual,
+    {
+        // non-canonical addresses can't be addressed
+        .base {0x8000'0000'0000},
+        .size {0xffff'0000'0000'0000}
+    },
+    initial_mappings[1].from_virtual,
+    initial_mappings[2].from_virtual,
+    initial_mappings[3].from_virtual
 }};
 
 void add_initial_mappings()
@@ -192,29 +206,33 @@ auto paging_allocate_and_map(uintptr_t virtual_base, size_t length, PageFlags fl
     }
 }
 
-auto paging_get_initial_free_regions() -> frg::array<MemoryRegion, 16> {
-    auto used_mappings = initial_mappings;
+auto paging_get_initial_free_regions() -> dav::array<MemoryRegion, 16> {
     // dav::static_sort(begin(used_mappings), end(used_mappings),
     //     [](const auto &lhs, const auto &rhs) {
     //         return dav::tie(lhs.from_virtual.base, lhs.from_virtual.size, lhs.to_physical)
     //             < dav::tie(rhs.from_virtual.base, rhs.from_virtual.size, lhs.from_physical);
     //     });
     
-    auto free_regions = frg::array<MemoryRegion, 16> {};
+    auto free_regions = dav::array<MemoryRegion, 16> {};
     auto i = std::size_t {0};
     auto base = uintptr_t {0x1000};
-    for (const auto &[from_virtual, to_physical, flags]: used_mappings) {
-        const auto mapping_start = from_virtual.base;
-        const auto mapping_end = mapping_start + from_virtual.size;
-        if (base >= mapping_start) {
-            base = std::max(base, mapping_end);
+    for (const auto &[unavailable_base, unavailable_size]: unavailable_virtual_memory_ranges) {
+        const auto unavailable_end = unavailable_base + unavailable_size;
+        if (base >= unavailable_base) {
+            base = dav::max(base, unavailable_end);
         } else {
             if (i > free_regions.size()) {
                 kernel_panic("exceeded number of supported free regions (16)\n");
             }
-            free_regions[i++] = {base, from_virtual.base - base};
-            base = mapping_end;
+            free_regions[i++] = {base, unavailable_base - base};
+            base = unavailable_end;
         }
+        // print unavailable
+        DEBUG("Unavailable region: %x to %x\n", unavailable_base, unavailable_end);
     }
     return free_regions;
+}
+
+auto paging_get_translation(uintptr_t virtual_address) -> PageTranslation {
+    return page_tree->get_translation(virtual_address);
 }

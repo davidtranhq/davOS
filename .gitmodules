@@ -3,13 +3,3 @@
 	url = https://github.com/limine-bootloader/limine.git
 	branch = v4.x-branch-binary
 	ignore = dirty
-[submodule "kernel/lib/frigg"]
-	path = kernel/lib/3rdparty/frigg
-	url = https://github.com/davidtranhq/frigg
-	branch = size-ssize
-[submodule "kernel/lib/3rdparty/cxxshim"]
-	path = kernel/lib/3rdparty/cxxshim
-	url = https://github.com/managarm/cxxshim
-[submodule "kernel/lib/davSTL"]
-	path = kernel/lib/davSTL
-	url = git@github.com:davidtranhq/davSTL

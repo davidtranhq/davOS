@@ -1,7 +1,7 @@
 #ifndef DAVOS_KERNEL_FRAME_H_INCLUDED
 #define DAVOS_KERNEL_FRAME_H_INCLUDED
 
-#include <stdint.h>
+#include <cstdint>
 
 /**
  * @brief A RAII wrapper class for a pointer to a physical frame. 

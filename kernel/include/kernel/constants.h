@@ -3,7 +3,7 @@
 
 #include <cstddef>
 
-constexpr auto page_size = std::size_t {0x1000};
-constexpr auto frame_size = std::size_t {0x1000};
+constexpr auto page_size = size_t {0x1000};
+constexpr auto frame_size = size_t {0x1000};
 
 #endif

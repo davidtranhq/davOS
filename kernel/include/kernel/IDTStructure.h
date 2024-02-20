@@ -1,9 +1,9 @@
 #ifndef DAVOS_KERNEL_IDT_STRUCTURE_H_INCLUDED
 #define DAVOS_KERNEL_IDT_STRUCTURE_H_INCLUDED
 
-#include <stdint.h>
+#include <cstdint>
 
-#include <frg/array.hpp>
+#include <dav/array.hpp>
 #include <kernel/SegmentSelector.h>
 
 class IDTStructure
@@ -69,7 +69,7 @@ public:
     const uint8_t *address() const;
 
 private:
-    frg::array<uint8_t, size> byte_representation_ {};
+    dav::array<uint8_t, size> byte_representation_ {};
 };
 
 #endif

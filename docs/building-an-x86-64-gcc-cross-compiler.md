@@ -1,6 +1,6 @@
 # Building an x86_64 Cross-Compiler
 
-The [OSDev wiki](https://wiki.osdev.org/Libgcc_without_red_zone) gives an in-depth tutorial. The modifications listed under https://wiki.osdev.org/Libgcc_without_red_zone need to be followed as well to support x86_64.
+The [OSDev wiki](https://wiki.osdev.org/Libgcc_without_red_zone) gives an in-depth tutorial but it is not complete for a complete C++ freestanding implementation. The modifications listed under https://wiki.osdev.org/Libgcc_without_red_zone need to be followed as well to support x86_64, and some changes below are made to add the freestanding C++ headers.
 
 ## Instructions
 
@@ -24,7 +24,8 @@ The articles in the above links are detailed enough to follow, but the steps are
     
 1. Export the following environnment variables (configured to your liking)
     ```bash
-    export PREFIX="$HOME/opt/cross" # directory to install the compiler (under $PREFIX/bin)
+    # directory to install the compiler (under $PREFIX/bin)
+    export PREFIX="$HOME/opt/cross" 
     export TARGET=x86_64-elf
     export PATH="$PREFIX/bin:$PATH" 
     ```
@@ -65,19 +66,21 @@ The articles in the above links are detailed enough to follow, but the steps are
 
     mkdir build-gcc
     cd build-gcc
-    ../gcc-x.y.z/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers # replace x.y.z with your binutils version
+    ../gcc-x.y.z/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers --disable-hosted-libstdcxx # replace x.y.z with your binutils version
     make all-gcc
     make all-target-libgcc
+    make all-target-libstdc++-v3
     make install-gcc
     make install-target-libgcc
+    make install-target-libstdc++-v3
     ```
     ### MacOS
     Identical to the Linux steps, but we also need to specify where to find the installed dependencies when creating the Makefile with `configure`:
     ```
-    ../gcc-12.2.0/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers \
-        --with-gmp=/opt/homebrew/Cellar/gmp/6.2.1_1 \
-        --with-mpfr=/opt/homebrew/Cellar/mpfr/4.2.0 \
-        --with-mpc=/opt/homebrew/Cellar/libmpc/1.3.1 
+    ../gcc-x.y.z/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers --disable-hosted-libstdcxx -\
+        --with-gmp=/opt/homebrew/Cellar/gmp/x.y.z \
+        --with-mpfr=/opt/homebrew/Cellar/mpfr/x.y.z \
+        --with-mpc=/opt/homebrew/Cellar/libmpc/x.y.z 
     ``` 
 1. Append the following to `~/.profile` to add the built compilers and linkers to the path:
     ```bash

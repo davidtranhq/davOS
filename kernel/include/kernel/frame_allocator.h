@@ -1,7 +1,7 @@
 #ifndef DAVOS_KERNEL_FRAME_ALLOCATOR_H_INCLUDED
 #define DAVOS_KERNEL_FRAME_ALLOCATOR_H_INCLUDED
 
-#include <stdint.h>
+#include <cstdint>
 
 auto frame_allocator_init() -> void;
 

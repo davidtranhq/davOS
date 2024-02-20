@@ -38,6 +38,13 @@ public:
      */
     void set_child_flags(int index, PageFlags flags);
 
+    /**
+     * @brief Get the flags of a specific entry
+     * 
+     * @param index 0-511: the index of the child
+     */
+    auto get_child_flags(int index) -> PageFlags;
+
 private:
     // fill with zeros
     uint64_t entries_[512] = {};

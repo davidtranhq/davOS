@@ -30,6 +30,14 @@ public:
      */
     void map_page_to_frame(uint64_t page, uint64_t frame, PageFlags flags);
 
+    /**
+     * @brief Get information about the physical translation for a given virtual address.
+     * 
+     * @param virtual_address 
+     * @return PageTranslation 
+     */
+    auto get_translation(uint64_t virtual_address) -> PageTranslation;
+
 private:
     PageTreeNode *root_ = nullptr;
 
