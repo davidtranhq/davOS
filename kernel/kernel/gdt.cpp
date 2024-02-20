@@ -1,7 +1,7 @@
 #include <kernel/gdt.h>
 #include <kernel/TableDescriptor.h>
 
-#include <frg/array.hpp> // std::size
+#include <cstddef>
 
 /**
  * @brief A valid segment must be present.

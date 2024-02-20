@@ -1,4 +1,5 @@
 #include <string.h>
+#include <cstddef>
 
 #include <kernel/constants.h>
 #include <kernel/frame_allocator.h>
@@ -8,8 +9,7 @@
 #include <kernel/paging.h>
 #include <kernel/SegmentSelector.h>
 #include <kernel/TableDescriptor.h>
-
-#include <frg/array.hpp> // std::size
+#include <dav/array.hpp>
 
 #include <stdio.h>
 
@@ -199,7 +199,8 @@ TableDescriptor idt_descriptor(IDTStructure::size, idt.address());
 
 void idt_init()
 {
-    IDTStructure::GateDescriptor idt_descriptors[] = {
+    constexpr auto num_descriptors = 20;
+    constexpr auto idt_descriptors = dav::array<IDTStructure::GateDescriptor, num_descriptors> {{
         {
             isr_divide_error, 
             SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
@@ -340,9 +341,9 @@ void idt_init()
             IDTStructure::GateType::interrupt,
             PrivilegeLevel::kernel
         }
-    };
+    }};
     
-    for (size_t i = 0; i < std::size(idt_descriptors); ++i)
+    for (size_t i = 0; i < idt_descriptors.size(); ++i)
     {
         idt.load_gate_descriptor(i, idt_descriptors[i]);
     }

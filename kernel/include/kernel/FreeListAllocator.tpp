@@ -65,7 +65,7 @@ auto FreeListAllocator<T>::deallocate_impl(T *base, size_t size) -> void {
     freed->coalesce_next();
     freed->coalesce_prev();
 
-#ifdef DEBUG_BUILD_FREE_LIST_ALLOCATOR
+#ifdef DEBUG_BUILD
     DEBUG("deallocate: %p, %x\n", base, size);
     head->print_free_list();
 #endif
@@ -74,7 +74,7 @@ auto FreeListAllocator<T>::deallocate_impl(T *base, size_t size) -> void {
 template <typename T>
 auto FreeListAllocator<T>::add_memory_impl(T *base, size_t size) -> void {
     DEBUG("head: %x\n", head);
-    DEBUG("adding memory: %x\n", size);
+    DEBUG("adding memory: %p\n", base);
     auto allocated = new(base) UsedBlockHeader {size};
     allocated += 1;
     deallocate_impl(reinterpret_cast<T *>(allocated), 0);
@@ -134,7 +134,7 @@ struct FreeListAllocator<T>::FreeBlockHeader {
         }
     }
 
-#ifdef DEBUG_BUILD_FREE_LIST_ALLOCATOR
+#ifdef DEBUG_BUILD
     auto print_free_list() -> void {
         DEBUG("\n====FREE LIST======\n");
         auto curr = this;

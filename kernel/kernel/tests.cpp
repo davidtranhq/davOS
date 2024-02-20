@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <frg/utility.hpp>
+#include <dav/algorithm.hpp>
 #include <kernel/Allocator.h>
 #include <kernel/frame_allocator.h>
 #include <kernel/FreeListAllocator.h>
@@ -84,13 +84,14 @@ void test_paging()
 
 template <typename Alloc>
 auto test_allocator() -> void {
+    printf("running allocator test...\n");
     auto allocator = Alloc {};
     const auto free_regions = paging_get_initial_free_regions();
     const auto free_region = free_regions[0];
     constexpr auto free_region_max_size = size_t {0x1000};
     allocator.add_memory(reinterpret_cast<Alloc::value_type *>(free_region.base),
-        frg::min(free_region.size, free_region_max_size));
-    
+        dav::max(free_region.size, free_region_max_size));
+
     const auto p1 = allocator.allocate(0x20);
     const auto p2 = allocator.allocate(0x30);
     const auto p3 = allocator.allocate(0x50);
@@ -98,6 +99,7 @@ auto test_allocator() -> void {
     allocator.deallocate(p3);
     allocator.deallocate(p2);
     allocator.deallocate(p1);
+    printf("allocator test: PASSED\n");
 }
 
 void run_all_tests()

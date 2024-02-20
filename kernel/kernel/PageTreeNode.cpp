@@ -32,3 +32,9 @@ void PageTreeNode::set_child_flags(int index, PageFlags flags)
     entry &= ~(0xff);
     add_child_flags(index, flags);
 }
+
+auto PageTreeNode::get_child_flags(int index) -> PageFlags
+{
+    uint64_t entry = entries_[index];
+    return static_cast<PageFlags>(entry & 0xff);
+}

@@ -37,6 +37,7 @@ CXXFLAGS += \
 	-fno-pie \
 	-fno-pic \
 	-fno-use-cxa-atexit \
+	-fno-exceptions \
 	-m64 \
 	-march=x86-64 \
 	-mabi=sysv \

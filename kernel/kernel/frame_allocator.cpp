@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <frg/optional.hpp>
+#include <dav/optional.hpp>
 #include <kernel/constants.h>
 #include <kernel/frame_allocator.h>
 #include <kernel/kernel.h>
@@ -80,7 +80,7 @@ private:
     size_t size_ = 0;
 };
 
-frg::optional<FixedStack> free_stack;
+auto free_stack = dav::optional<FixedStack> {};
 
 /**
  * @brief Check if an entry in the Limine memory map is allocatable (available for use)

@@ -1,5 +1,5 @@
 DIR := kernel
-SUBMODULES := lib/kernelc lib/3rdparty
+SUBMODULES := lib/kernelc lib/kernelcpp
 
 INCLUDE_DIRS += $(DIR)/include
 OBJS += $(addprefix $(DIR)/, \
