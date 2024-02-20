@@ -10,16 +10,9 @@ A GCC cross-compiler targetting x86_64-elf needs to be built. Follow [these inst
 
 ### Building the OS
 
-NOTE: Because this repostiory contains git submodules, it should be cloned with 
-```bash
-git clone --recurse-submodules git@github.com:davidtranhq/davOS.git
-```
-Or, if already cloned, run `git submodule init` followed by `git submodule update` to checkout the required submodules.
-
 Run `make` to build the kernel `davos.elf`.
 
 Run `make iso` to build the kernel and a bootable CD-ROM `davos.iso`.
-
 
 ## Booting the OS
 
@@ -30,6 +23,8 @@ If using qemu, the OS can be booted from the ISO using `qemu-system-x86_64 -cdro
 Alternatively, run them `make qemu` to build the kernel and CD-ROM and run qemu all in one step.
 
 Use `make debug` to start QEMU in the background with an attached GDB instance.
+
+Use `make test` to start QEMU with debug messages and tests enabled.
 
 ### QEMU on WSL2
 
