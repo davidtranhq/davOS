@@ -192,10 +192,12 @@ void paging_add_mapping(uintptr_t virtual_base,
         page_tree->map_page_to_frame(page, frame, flags);
     }
 
+#ifdef DEBUG_BUILD
     uint64_t num_pages = (last_page - first_page) / page_size;
     DEBUG("Mapped %d virtual page(s) %x to %x (end-exclusive) to %d "
           "physical frame(s) starting at %x. %d physical frames left.\n",
           num_pages, first_page, last_page, num_pages, first_frame, available_frames());
+#endif
 }
 
 auto paging_allocate_and_map(uintptr_t virtual_base, size_t length, PageFlags flags) -> void
