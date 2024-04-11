@@ -62,6 +62,16 @@ public:
         return interpret_val();
     }
 
+    /**
+     * @brief Return true/false whether the optional contains a value. 
+     * 
+     * @return true 
+     * @return false 
+     */
+    constexpr auto operator!() const noexcept -> bool {
+        return !is_present;
+    }
+
 private:
     /**
      * @brief Interpret the buffer as a (const) T and return a pointer to it.

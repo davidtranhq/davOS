@@ -9,83 +9,29 @@
  */
 
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 
+#include <dav/algorithm.hpp>
 #include <dav/optional.hpp>
+#include <dav/allocated_stack.hpp>
+#include <dav/allocated_vector.hpp>
 #include <kernel/constants.h>
 #include <kernel/frame_allocator.h>
 #include <kernel/kernel.h>
 #include <kernel/limine_features.h>
 #include <kernel/macros.h>
 
-namespace
-{
+static auto free_stack = dav::optional<dav::allocated_stack> {};
 
-/**
- * @brief A stack that does not own the memory it uses to store its stack contents:
- * a fixed memory allocation needs to be passed in through the constructor and managed externally.
- * 
- * It also cannot grow; the size is fixed and determined when the stack is constructed.
- * 
- * These restrictions exist to allow it to be used in an environnment where a dynamic
- * memory allocator doesn't yet exist.
- */
-class FixedStack
-{
-public:
-    FixedStack(void *base, size_t max_size) noexcept
-        : stack_ {reinterpret_cast<void **>(base)},
-          max_size_ {max_size}
-    {}
-
-    void push(void *frame_pointer) noexcept
-    {
-        if (full())
-            return;
-        stack_[size_] = frame_pointer;
-        size_ += 1;
-    }
-
-    void pop() noexcept
-    {
-        if (empty())
-            return;
-        size_ -= 1;
-    }
-
-    void *top() const noexcept
-    {
-        return stack_[size_ - 1];
-    }
-
-    bool empty() const noexcept
-    {
-        return size_ == 0;
-    }
-
-    bool full() const noexcept
-    {
-        return size_ == max_size_;
-    }
-
-    size_t size() const noexcept
-    {
-        return size_;
-    }
-
-private:
-    void **stack_ = 0;
-    size_t max_size_ = 0;
-    size_t size_ = 0;
+struct FrameRange {
+    uintptr_t begin;
+    uintptr_t end;
 };
-
-auto free_stack = dav::optional<FixedStack> {};
 
 /**
  * @brief Check if an entry in the Limine memory map is allocatable (available for use)
  */
-bool is_allocatable(struct limine_memmap_entry *entry)
+static bool is_allocatable(struct limine_memmap_entry *entry)
 {
     return entry->type == LIMINE_MEMMAP_USABLE;
 }
@@ -93,7 +39,7 @@ bool is_allocatable(struct limine_memmap_entry *entry)
 /**
  * @brief Calculate the total number of allocatable frames for use in this system.
  */
-size_t get_num_allocatable_frames()
+static size_t get_num_allocatable_frames()
 {
     size_t allocatable_frames = 0;
     for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
@@ -108,24 +54,24 @@ size_t get_num_allocatable_frames()
 /**
  * @brief Return the ceiling of a division.
  */
-inline constexpr auto ceil_div(auto dividend, auto divisor)
+static constexpr auto ceil_div(auto dividend, auto divisor)
 {
     return (dividend / divisor) + (dividend % divisor != 0);
 }
 
 /**
- * @brief Reserve the intiial contiguous frames required to initialize the free stack.
+ * @brief Reserves contiguous frames from the system.
  * 
  * Since the free stack is not initailized yet when this function is called, we can't use
  * the free stack to allocate memory; instead, we reserve
  * the frames by manually examining the memory map provided by Limine.
  * 
  * This function should NOT be used to allocate memory for anything else
- * other than the free stack: it's only purpose is to allocate memory for the free stack itself
+ * other than data structures required before the physical memory manager is initialized.
  * 
  * @returns A pointer the start (low address) of the contiguous frames
  */
-uintptr_t allocate_initial_contiguous_frames(size_t num_frames)
+static uintptr_t manually_reserve_contiguous_frames(size_t num_frames)
 {
     // look for a contiguous memory segment that is big enough to hold num_frames,
     // and is allocatable
@@ -141,17 +87,21 @@ uintptr_t allocate_initial_contiguous_frames(size_t num_frames)
 }
 
 /**
- * @brief Initialize the free stack with all the allocatable frames.
- * We exclude the frames that were used to allocate the stack itself.
+ * @brief Initialize the free stack with all the allocatable frames, excluding the given ranges.
  * 
- * @param free_stack_frames_begin the start of the contiguous free stack frames
- * @param free_stack_frames_end one past the end of the contiguous free stack frames
+ * @param exclude_ranges A list of ranges to exclude from the free stack.
  */
-void fill_free_stack(
-    uintptr_t free_stack_frames_begin,
-    uintptr_t free_stack_frames_end
-)
+template <size_t num_exclude_ranges>
+static void fill_free_stack(dav::array<FrameRange, num_exclude_ranges> const &exclude_ranges)
 {
+    auto const in_exclude_range = [&exclude_ranges](uintptr_t frame) {
+        for (auto const &exclude_range : exclude_ranges) {
+            if (frame >= exclude_range.begin && frame < exclude_range.end)
+                return true;
+        }
+        return false;
+    };
+
     // add the allocatable frames from each segment to the free stack
     for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
     {
@@ -164,20 +114,17 @@ void fill_free_stack(
         for (uintptr_t frame = entry->base; frame < end_of_entry; frame += frame_size)
         {
             // do not include frames that were allocated for the free stack
-            if (frame >= free_stack_frames_begin && frame < free_stack_frames_end)
+            if (in_exclude_range(frame))
                 continue;
             free_stack->push(reinterpret_cast<void *>(frame));
         }
     }
 }
 
-} // anonymous namespace
-
 void frame_allocator_init()
 {
     DEBUG("Initializing frame allocator...\n");
-
-    // count how many frames of memory we can allocate to the user in total 
+    // count how many frames of memory we can allocate to the user in total
     // (and hence the max size of the free stack)
     size_t num_allocatable_frames = get_num_allocatable_frames();
     DEBUG("Found %d allocatable frames\n", num_allocatable_frames);
@@ -190,8 +137,8 @@ void frame_allocator_init()
     size_t num_free_stack_frames = ceil_div(num_allocatable_frames, frame_pointers_per_frame);
 
     // get contiguous frames for the free stack
-    uintptr_t free_stack_frames_begin = allocate_initial_contiguous_frames(num_free_stack_frames);
-    DEBUG("Allocated %d contiguous frames for the free stack\n", num_free_stack_frames);
+    uintptr_t free_stack_frames_begin = manually_reserve_contiguous_frames(num_free_stack_frames);
+    DEBUG("Reserved %d contiguous frames for the free stack\n", num_free_stack_frames);
 
     if (!free_stack_frames_begin)
         kernel_panic("not enough contiguous space for the free stack frame allocator");
@@ -204,10 +151,12 @@ void frame_allocator_init()
                        num_allocatable_frames);
 
     // fill the free stack with the allocatable frames
-    // (does not include the frames we just allocated for the free stack itself)
-    fill_free_stack(free_stack_frames_begin, free_stack_frames_end);
-    DEBUG("Finished initializing the frame allocator with %d free frames\n", free_stack->size());
+    auto const exclude_ranges = dav::array<FrameRange, 1> {
+        FrameRange {free_stack_frames_begin, free_stack_frames_end}
+    };
 
+    fill_free_stack(exclude_ranges);
+    DEBUG("Finished initializing the frame allocator with %d free frames\n", free_stack->size());
 }
 
 void *allocate_frame()
@@ -287,5 +236,14 @@ void print_memory_map()
         struct limine_memmap_entry *entry = limine::memory_map->entries[i];
         printf("base: %x, limit: %x, type: %s\n", entry->base, entry->length,
             limine_memmap_type(entry->type));
+    }
+}
+
+auto update_frame_ref_count(uintptr_t frame, int change) -> void
+{
+    // for now, just assume each frame can only be referenced once, so decrementing it
+    // is equivalent to free-ing it
+    if (change == -1) {
+        deallocate_frame(reinterpret_cast<void *>(frame));
     }
 }

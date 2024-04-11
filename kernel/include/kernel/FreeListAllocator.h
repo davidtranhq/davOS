@@ -19,6 +19,8 @@ public:
 
     auto add_memory_impl(T *base, std::size_t size) -> void;
 
+    auto get_size_impl(T *base) -> std::size_t;
+
 private:
     struct FreeBlockHeader;
     struct UsedBlockHeader;

@@ -28,6 +28,11 @@ struct MemoryRegion {
     size_t size {};
 };
 
+struct PageRange {
+    uintptr_t first_page = 0;
+    uintptr_t last_page = 0;
+};
+
 /**
  * @brief 
  * 
@@ -82,5 +87,12 @@ auto paging_get_initial_free_regions() -> dav::array<MemoryRegion, paging_num_fr
  * @return uintptr_t 
  */
 auto paging_get_translation(uintptr_t virtual_address) -> PageTranslation;
+
+
+/**
+ * @brief Get the first and last pages for the smallest range containing a contiguous
+ * virtual memory region.
+ */
+auto get_page_range(uintptr_t virtual_base, size_t length) -> PageRange;
 
 #endif

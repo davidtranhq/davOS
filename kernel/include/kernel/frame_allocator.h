@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+struct PhysicalFrame;
+
 auto frame_allocator_init() -> void;
 
 /**
@@ -22,7 +24,7 @@ auto deallocate_frame(void *frame_to_deallocate) -> void;
 auto available_frames() -> uint64_t;
 
 /**
- * @brief Get a pointer pointing to the corresponding virtual address of a physical address.
+ * @brief Get a pointer pointing to the corresponding virtual address of a kernel physical address.
  */
 auto kernel_physical_to_virtual(void *physical_address) -> void *;
 
@@ -42,5 +44,10 @@ auto free_limine_bootloader_memory() -> void;
  * @brief Print the base, limit, and mapping type of each of the initial Limine memory map
  */
 auto print_memory_map() -> void;
+
+/**
+ * @brief Update the ref count for the given frame by change.
+ */
+auto update_frame_ref_count(uintptr_t frame, int change) -> void;
 
 #endif

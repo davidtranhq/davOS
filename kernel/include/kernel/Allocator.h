@@ -36,6 +36,16 @@ public:
     auto add_memory(T *ptr, size_t size) -> void {
         static_cast<Derived<T> *>(this)->add_memory_impl(ptr, size);
     }
+
+    /**
+     * @brief Get the size of the region allocated at ptr.
+     * 
+     * @param ptr Pointer pointing to the allocated region. 
+     * @return size_t Size of the allocated region.
+     */
+    auto get_size(T *ptr) -> size_t {
+        return static_cast<Derived<T> *>(this)->get_size_impl(ptr);
+    }
 };
 
 #endif
