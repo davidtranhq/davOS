@@ -13,8 +13,7 @@ using virtual_allocator_type = FreeListAllocator<allocated_type>;
 static auto allocator = Allocator<virtual_allocator_type> {};
 
 auto vmm_init() -> void {
-    const auto free_virtual_memory_regions = paging_get_initial_free_regions();
-    for (const auto &[base, size] : free_virtual_memory_regions) {
+    for (const auto &[base, size] : paging_get_initial_free_regions()) {
         if (size == 0) {
             continue;
         }
@@ -28,22 +27,21 @@ auto add_virtual_memory(void *base, size_t size) -> void {
     allocator.add_memory(reinterpret_cast<allocated_type *>(base), size);
 }
 
-auto update_ref_count_of_frames_in_region(allocated_type *ptr, int change) -> void {
-    auto const size = allocator.get_size(ptr);
-    auto const [start, end] = get_page_range(reinterpret_cast<uintptr_t>(ptr), size);
-    for (auto page = start; page != end; page += page_size) {
-        update_frame_ref_count(paging_get_translation(page).physical_address, change);
-    }
-}
-
 auto vmalloc(size_t size) -> void * {
-    auto const ptr = allocator.allocate(size);
-    update_ref_count_of_frames_in_region(ptr, 1);
-    return ptr;
+    return allocator.allocate(size);
 }
 
 auto vfree(void *ptr) -> void {
-    auto const casted_ptr = reinterpret_cast<allocated_type *>(ptr);
-    allocator.deallocate(casted_ptr, 0);
-    update_ref_count_of_frames_in_region(casted_ptr, -1);
+    allocator.deallocate(reinterpret_cast<allocated_type *>(ptr));
+    // assume frames cannot be referenced multiple times for now: deallocate the frame mapped to
+    // by this virtual address
+    deallocate_frame(
+        reinterpret_cast<void *>(
+            paging_get_translation(
+                reinterpret_cast<uintptr_t>(
+                    ptr
+                )
+            ).physical_address
+        )
+    );
 }
