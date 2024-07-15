@@ -88,6 +88,8 @@ The articles in the above links are detailed enough to follow, but the steps are
     ```
     where `<PREFIX>` is the value of the chosen install directory (the value of `$PREFIX`).
 
+1. If using `clangd`, set the `STL_PATHS` in the root directory Makefile to point to the location of the compilers includes and system specific includes.
+
 ### Verification
 
 You can verify that both the C and C++ compiilers were properly built with
