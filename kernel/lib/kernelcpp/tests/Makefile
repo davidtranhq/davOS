@@ -1,6 +1,10 @@
 BIN := test_kernelcpp
-CXX := g++
-SRCS := main.cpp
+CXX := clang++
+GTEST_PATH := ../../../../external/gtest
+SRCS := \
+	test_UniquePtr.cpp \
+	test_Function.cpp \
+
 OBJS := $(SRCS:.cpp=.o)
 
 CXXFLAGS := \
@@ -10,10 +14,13 @@ CXXFLAGS := \
 	-O3 \
 	-std=c++20 \
 
-INCLUDE_DIRS := ../../../../external/gtest/googletest/include
+INCLUDE_DIRS := \
+	$(GTEST_PATH)/googletest/include \
+	../include \
+
 CPPFLAGS += $(addprefix -I, $(INCLUDE_DIRS))
 
-LIB_DIRS := ../../../../external/gtest/build/lib
+LIB_DIRS := $(GTEST_PATH)/build/lib
 LDFLAGS += $(addprefix -L, $(LIB_DIRS))
 
 LIB_NAMES := gtest gtest_main
@@ -30,5 +37,13 @@ $(BIN): $(OBJS)
 clean:
 	rm -f $(OBJS) $(BIN)
 
-.PHONY: all clean
+gtest:
+	rm -rf $(GTEST_PATH)/build
+	mkdir -p $(GTEST_PATH)/build
+	cmake -B $(GTEST_PATH)/build -S $(GTEST_PATH)
+	cd $(GTEST_PATH)/build
+	make -C $(GTEST_PATH)/build
+
+
+.PHONY: all clean gtest
 
