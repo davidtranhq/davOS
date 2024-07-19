@@ -4,6 +4,7 @@ GTEST_PATH := ../../../../external/gtest
 SRCS := \
 	test_UniquePtr.cpp \
 	test_Function.cpp \
+	test_Concepts.cpp \
 
 OBJS := $(SRCS:.cpp=.o)
 
@@ -11,7 +12,6 @@ CXXFLAGS := \
 	-Wall \
 	-Werror \
 	-Wpedantic \
-	-O3 \
 	-std=c++20 \
 
 INCLUDE_DIRS := \
@@ -26,7 +26,11 @@ LDFLAGS += $(addprefix -L, $(LIB_DIRS))
 LIB_NAMES := gtest gtest_main
 LDFLAGS += $(addprefix -l, $(LIB_NAMES))
 
-all: $(BIN)
+release: CXXFLAGS += -O3
+release: $(BIN)
+
+debug: CXXFLAGS += -g
+debug: $(BIN)
 
 $(BIN): $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)

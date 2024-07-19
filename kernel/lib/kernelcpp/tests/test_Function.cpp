@@ -40,3 +40,24 @@ TEST(FunctionTest, CallsFunctor)
     auto f = dav::Function(functor);
     EXPECT_EQ(f(), 2);
 }
+
+TEST(FunctionTest, CopiesCallable)
+{
+    class FunctorWithState {
+    public:
+        int operator()(bool increment)
+        {
+            if (increment)
+                x++;
+            return x;
+        }
+    private:
+        int x = 1;
+    };
+    auto source = dav::Function(FunctorWithState {});
+    auto destination = source;
+    EXPECT_EQ(source(false), 1);
+    EXPECT_EQ(destination(false), 1);
+    EXPECT_EQ(source(true), 2);
+    EXPECT_EQ(destination(true), 2);
+}

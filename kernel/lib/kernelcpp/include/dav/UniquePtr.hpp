@@ -54,6 +54,12 @@ public:
         return m_resource;
     }
 
+    const Resource* operator-> () const
+    {
+        assert(m_resource);
+        return m_resource;
+    }
+
     operator bool() const { return m_resource; }
 
     Resource* release() noexcept

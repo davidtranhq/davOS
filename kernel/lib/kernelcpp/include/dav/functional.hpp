@@ -18,11 +18,12 @@ class Function;
 
 template<typename ReturnType, typename ...ArgumentTypes>
 class Function<ReturnType(ArgumentTypes...)> {
-public:
+private:
     class Callable {
     public:
-        virtual ReturnType call(ArgumentTypes...) = 0;
         virtual ~Callable() = default;
+        virtual ReturnType call(ArgumentTypes...) = 0;
+        virtual UniquePtr<Callable> clone() const = 0;
     };
 
     template<typename CallableType>
@@ -37,14 +38,49 @@ public:
         {
             return m_callable(args...);
         }
+
+        UniquePtr<Callable> clone() const override
+        {
+            return makeUnique<CallableImpl>(m_callable);
+        }
+
     private:
         CallableType m_callable;
     };
 
-    template<typename CallableType>
-    Function(CallableType&& callable)
-        : m_callable(makeUnique<CallableImpl<CallableType>>(forward<CallableImpl<CallableType>>(callable)))
+public:
+    Function() noexcept = default;
+
+    Function(decltype(nullptr) ptr)
+        : m_callable(ptr)
     {}
+
+    Function(const Function& source)
+        : m_callable(source.m_callable ? source.m_callable->clone() : UniquePtr<Callable>(nullptr))
+    {}
+
+    Function(Function&& source) = default;
+
+    /*
+     * Construct a dav::Function from an arbitrary callable type, that is any type for which
+     * operator()() is defined. (Note that technically in the standard pointers to class members
+     * are also defined as callable, but we don't support that yet).
+     *
+     * The template constraint ensures that the callable type is not itself a dav::Function,
+     * to avoid shadowing the copy construcotr.
+     */
+    template<typename CallableType>
+        requires (!SameAs<RemoveReferenceAndCvQualifiers_t<CallableType>, Function>)
+    Function(CallableType&& callable) 
+        : m_callable(makeUnique<CallableImpl<CallableType>>(forward<CallableType>(callable)))
+    {}
+
+    Function& operator=(const Function& source)
+    {
+        m_callable = source.m_callable.clone();
+    }
+
+    Function& operator=(Function&& source) = default;
 
     ReturnType operator()(ArgumentTypes... args)
     {
@@ -52,7 +88,7 @@ public:
         return m_callable->call(args...);
     }
 
-
+private:
     UniquePtr<Callable> m_callable;
 };
 

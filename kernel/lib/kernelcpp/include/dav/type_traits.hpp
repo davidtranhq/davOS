@@ -21,6 +21,18 @@ template<typename T> struct RemoveReference { using type = T; };
 template<typename T> struct RemoveReference<T&> { using type = T; };
 template<typename T> struct RemoveReference<T&&> { using type = T; };
 
+template<typename T> struct RemoveCvQualifiers { using type = T; };
+template<typename T> struct RemoveCvQualifiers<const T> { using type = T; };
+template<typename T> struct RemoveCvQualifiers<volatile T> { using type = T; };
+template<typename T> struct RemoveCvQualifiers<const volatile T> { using type = T; };
+
+template<typename T>
+struct RemoveReferenceAndCvQualifiers : RemoveCvQualifiers<typename RemoveReference<T>::type>
+{};
+
+template<typename T>
+using RemoveReferenceAndCvQualifiers_t = typename RemoveReferenceAndCvQualifiers<T>::type;
+
 template<typename T> struct TypeIdentity { using type = T; };
 
 /*
@@ -56,6 +68,12 @@ struct AddLValueReference : decltype(tryAddLvalueReference<T>()) {};
 
 template<typename T>
 struct AddRvalueReference : decltype(tryAddRvalueReference<T>()) {};
+
+template<typename T, typename U>
+struct IsSame : FalseType {};
+
+template<typename T>
+struct IsSame<T, T> : TrueType {};
 
 } // namespace dav
 

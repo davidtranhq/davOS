@@ -24,6 +24,10 @@ concept Convertible = ImplicitConvertible<From, To> && Returnable<To>;
 
 template<typename T>
 concept LvalueReference = IsLvalueReference<T>::value;
+
+template<typename T, typename U>
+concept SameAs = IsSame<T, U>::value;
+
 } // namespace dav
 
 #endif
