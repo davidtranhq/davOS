@@ -81,6 +81,12 @@ auto FreeListAllocator<T>::add_memory_impl(T *base, size_t size) -> void {
 }
 
 template <typename T>
+auto FreeListAllocator<T>::get_size_impl(T *base) -> size_t {
+    auto header = reinterpret_cast<UsedBlockHeader *>(base) - 1;
+    return header->size;
+}
+
+template <typename T>
 struct FreeListAllocator<T>::FreeBlockHeader {
     size_t size {};
     FreeBlockHeader* next = nullptr;

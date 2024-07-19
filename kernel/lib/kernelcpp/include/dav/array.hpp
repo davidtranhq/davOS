@@ -62,6 +62,6 @@ constexpr auto array_of(T &&...t) -> array<V, sizeof...(T)> {
     return {{std::forward<T>(t)...}};
 }
 
-}
+} // namespace dav
 
 #endif // KERNELCPP_ARRAY

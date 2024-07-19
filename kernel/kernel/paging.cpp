@@ -159,11 +159,6 @@ uint64_t page_ceil(uint64_t address)
     return page_floor(address + page_size);
 }
 
-struct PageRange {
-    uintptr_t first_page = 0;
-    uintptr_t last_page = 0;
-};
-
 auto get_page_range(uintptr_t virtual_base, size_t length) -> PageRange
 {
     const auto first_page = page_floor(virtual_base);

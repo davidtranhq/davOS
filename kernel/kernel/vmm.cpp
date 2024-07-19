@@ -1,4 +1,6 @@
 #include <dav/optional.hpp>
+#include <kernel/constants.h>
+#include <kernel/frame_allocator.h>
 #include <kernel/FreeListAllocator.h>
 #include <kernel/kernel.h>
 #include <kernel/macros.h>
@@ -8,11 +10,10 @@
 using allocated_type = std::byte;
 using virtual_allocator_type = FreeListAllocator<allocated_type>;
 
-static auto allocator = virtual_allocator_type {};
+static auto allocator = Allocator<virtual_allocator_type> {};
 
 auto vmm_init() -> void {
-    const auto free_virtual_memory_regions = paging_get_initial_free_regions();
-    for (const auto &[base, size] : free_virtual_memory_regions) {
+    for (const auto &[base, size] : paging_get_initial_free_regions()) {
         if (size == 0) {
             continue;
         }
@@ -23,13 +24,24 @@ auto vmm_init() -> void {
 }
 
 auto add_virtual_memory(void *base, size_t size) -> void {
-    allocator.add_memory_impl(reinterpret_cast<allocated_type *>(base), size);
+    allocator.add_memory(reinterpret_cast<allocated_type *>(base), size);
 }
 
 auto vmalloc(size_t size) -> void * {
-    return allocator.allocate_impl(size);
+    return allocator.allocate(size);
 }
 
 auto vfree(void *ptr) -> void {
-    allocator.deallocate_impl(reinterpret_cast<allocated_type *>(ptr), 0);
+    allocator.deallocate(reinterpret_cast<allocated_type *>(ptr));
+    // assume frames cannot be referenced multiple times for now: deallocate the frame mapped to
+    // by this virtual address
+    deallocate_frame(
+        reinterpret_cast<void *>(
+            paging_get_translation(
+                reinterpret_cast<uintptr_t>(
+                    ptr
+                )
+            ).physical_address
+        )
+    );
 }
