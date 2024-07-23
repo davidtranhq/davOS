@@ -4,3 +4,4 @@ isoroot
 sysroot
 .vscode/
 .cache/
+test_kernelcpp
