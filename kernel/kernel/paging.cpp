@@ -30,7 +30,7 @@ extern LinkerAddress kernel_readonly_start,
                      kernel_rw_end;
 
 
-static dav::optional<PageTree> page_tree;
+static dav::Optional<PageTree> page_tree;
 
 struct Mapping {
     MemoryRegion from_virtual {};
@@ -38,7 +38,7 @@ struct Mapping {
     PageFlags flags {};
 };
 
-static auto initial_mappings = dav::array<Mapping, 4> {{
+static auto initial_mappings = dav::Array<Mapping, 4> {{
     {
         // 4 GiB identity map
         .from_virtual {0x1000, 0x100000000},
@@ -71,7 +71,7 @@ static auto initial_mappings = dav::array<Mapping, 4> {{
 /**
  * @brief Virtual ranges that are either already in use, or can't be addressed.
  */
-static auto unavailable_virtual_memory_ranges = dav::array<MemoryRegion, initial_mappings.size() + 1> {{
+static auto unavailable_virtual_memory_ranges = dav::Array<MemoryRegion, initial_mappings.size() + 1> {{
     initial_mappings[0].from_virtual,
     {
         // non-canonical addresses can't be addressed
@@ -203,14 +203,14 @@ auto paging_allocate_and_map(uintptr_t virtual_base, size_t length, PageFlags fl
     }
 }
 
-auto paging_get_initial_free_regions() -> dav::array<MemoryRegion, 16> {
+auto paging_get_initial_free_regions() -> dav::Array<MemoryRegion, 16> {
     // dav::static_sort(begin(used_mappings), end(used_mappings),
     //     [](const auto &lhs, const auto &rhs) {
     //         return dav::tie(lhs.from_virtual.base, lhs.from_virtual.size, lhs.to_physical)
     //             < dav::tie(rhs.from_virtual.base, rhs.from_virtual.size, lhs.from_physical);
     //     });
     
-    auto free_regions = dav::array<MemoryRegion, 16> {};
+    auto free_regions = dav::Array<MemoryRegion, 16> {};
     auto i = std::size_t {0};
     auto base = uintptr_t {0x1000};
     for (const auto &[unavailable_base, unavailable_size]: unavailable_virtual_memory_ranges) {

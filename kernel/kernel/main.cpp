@@ -14,6 +14,8 @@ extern LinkerAddress kernel_stack_start;
 [[ noreturn ]]
 void kernel_main()
 {
+    [[ maybe_unused ]]
+    volatile int x = 0;
     kernel_init();
 
     DEBUG("Stack initialized to %x\n", &kernel_stack_start);

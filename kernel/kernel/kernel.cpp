@@ -1,12 +1,11 @@
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include <kernel/frame_allocator.h>
 #include <kernel/gdt.h>
 #include <kernel/idt.h>
 #include <kernel/kernel.h>
-#include <kernel/terminal.h>
+#include <kernel/Terminal.hpp>
 #include <kernel/types.h>
 #include <kernel/paging.h>
 #include <kernel/vmm.h>
@@ -29,9 +28,9 @@ void call_global_constructors()
 void kernel_init()
 {
     call_global_constructors();
+    KernelTerminal::initialize();
     gdt_init();
     idt_init();
-    terminal_init();
     frame_allocator_init();
     paging_init();
     vmm_init();
