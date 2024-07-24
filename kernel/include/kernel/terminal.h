@@ -16,5 +16,23 @@ void terminal_init(void);
  */
 void terminal_write(const char *str, size_t size);
 
+template<typename Allocator>
+class Terminal {
+public:
+    enum class ScrollMode {
+        automatic,
+        manual
+    };
+
+public:
+    Terminal(limine_framebuffer*);
+
+    void scrollUp(int numberOfLines); 
+    void writeAtCursor(dav::StringView);
+private:
+    limine_framebuffer* m_frameBuffer = nullptr;
+    dav::Vector<char, Allocator> m_textBuffer;
+    size_t m_cursor = 0;
+};
 
 #endif
