@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <dav/functional.hpp>
-#include <functional>
 
 int foo() { return 2; }
 
