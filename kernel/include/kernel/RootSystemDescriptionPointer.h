@@ -1,6 +1,8 @@
 #ifndef DAVOS_KERNEL_ACPI_H
 #define DAVOS_KERNEL_ACPI_H
 
+#include <kernel/kernel.h>
+
 /*
  * A data structure used for the ACPI programming interface.
  *
@@ -59,6 +61,18 @@ struct RootSystemDescriptionPointer {
         if (acpiRevision == 0)
             return verifyPartialChecksum();
         return verifyFullChecksum();
+    }
+
+    uint64_t rootSystemDescriptionTablePointer() const
+    {
+        /*
+         * It's likely that the RSDT and XSDT pointers point to the same location for compatibility reasons,
+         * but the ACPI standards specify that ACPI version 2.0 uses the XSDT address, so we comply
+         * with the standards here.
+         */
+        if (!validate())
+            kernel_panic("invalid RSDP table\n");
+        return acpiRevision == 0 ? rsdtPhysicalAddress : xsdtPhysicalAddress;
     }
 
     char signature[8];
