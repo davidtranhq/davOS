@@ -4,4 +4,6 @@ isoroot
 sysroot
 .vscode/
 .cache/
+.ccls-cache/
+*.dSYM
 test_kernelcpp

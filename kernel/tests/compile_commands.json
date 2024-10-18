@@ -1,0 +1,22 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/clang++",
+      "-I../../external/gtest/googletest/include",
+      "-I../include",
+      "-I../lib/kernelcpp/include",
+      "-Wall",
+      "-Werror",
+      "-Wpedantic",
+      "-std=c++20",
+      "-O3",
+      "-c",
+      "-o",
+      "test_Terminal.o",
+      "test_Terminal.cpp"
+    ],
+    "directory": "/Users/david/src/davOS/kernel/tests",
+    "file": "/Users/david/src/davOS/kernel/tests/test_Terminal.cpp",
+    "output": "/Users/david/src/davOS/kernel/tests/test_Terminal.o"
+  }
+]

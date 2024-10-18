@@ -9,7 +9,7 @@
 #include <kernel/paging.h>
 #include <kernel/SegmentSelector.h>
 #include <kernel/TableDescriptor.h>
-#include <dav/array.hpp>
+#include <dav/Array.hpp>
 
 #include <stdio.h>
 
@@ -200,7 +200,7 @@ TableDescriptor idt_descriptor(IDTStructure::size, idt.address());
 void idt_init()
 {
     constexpr auto num_descriptors = 20;
-    constexpr auto idt_descriptors = dav::array<IDTStructure::GateDescriptor, num_descriptors> {{
+    constexpr auto idt_descriptors = dav::Array<IDTStructure::GateDescriptor, num_descriptors> {{
         {
             isr_divide_error, 
             SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),

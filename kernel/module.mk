@@ -17,7 +17,7 @@ OBJS += $(addprefix $(DIR)/, \
 	kernel/PageTreeNode.o \
 	kernel/reload_segment_registers.o \
 	kernel/TableDescriptor.o \
-	kernel/terminal.o \
+	kernel/Terminal.o \
 	kernel/tests.o \
 	kernel/vmm.o \
 )

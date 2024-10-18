@@ -32,7 +32,7 @@ public:
     const uint8_t *address() const;
 
 private:
-    dav::array<uint8_t, size> byte_representation_;
+    dav::Array<uint8_t, size> byte_representation_;
 };
 
 #endif

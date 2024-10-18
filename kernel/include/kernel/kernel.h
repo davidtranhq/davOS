@@ -1,5 +1,6 @@
-#ifndef DAVOS_KERNEL_PANIC_H_INCLUDED
-#define DAVOS_KERNEL_PANIC_H_INCLUDED
+#pragma once
+
+#include <stdarg.h>
 
 /**
  * @brief Initialize kernel services such as the terminal, IDT, etc.
@@ -21,4 +22,19 @@ void kernel_panic(const char *fmt, ...);
 [[ noreturn ]]
 void kernel_hang();
 
-#endif
+/**
+ * @brief Assert that the given condition is true, otherwise panic.
+ * 
+ * @param condition The condition to assert
+ * @param fmt A format-specifier for the string
+ * @param ... Variadic arguments for the format specifier
+ */
+inline void kernel_assert(bool condition, const char *fmt, ...)
+{
+	if (!condition) {
+		va_list args;
+		va_start(args, fmt);
+		kernel_panic(fmt, args);
+		va_end(args);
+	}
+}

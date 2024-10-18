@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <dav/array.hpp>
+#include <dav/Array.hpp>
 #include <kernel/SegmentSelector.h>
 
 class IDTStructure
@@ -69,7 +69,7 @@ public:
     const uint8_t *address() const;
 
 private:
-    dav::array<uint8_t, size> byte_representation_ {};
+    dav::Array<uint8_t, size> byte_representation_ {};
 };
 
 #endif

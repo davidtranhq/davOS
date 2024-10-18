@@ -7,7 +7,7 @@
 namespace dav {
 
 template <typename T, size_t N>
-struct array {
+struct Array {
     using iterator = T *;
     using const_iterator = const T *;
     T arr[N];
@@ -58,7 +58,7 @@ struct array {
  * @return array<V, sizeof...(T)> 
  */
 template <typename V, typename ...T>
-constexpr auto array_of(T &&...t) -> array<V, sizeof...(T)> {
+constexpr auto array_of(T &&...t) -> Array<V, sizeof...(T)> {
     return {{std::forward<T>(t)...}};
 }
 

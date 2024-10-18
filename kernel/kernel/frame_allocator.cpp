@@ -21,7 +21,7 @@
 #include <kernel/limine_features.h>
 #include <kernel/macros.h>
 
-static auto free_stack = dav::optional<dav::allocated_stack> {};
+static auto free_stack = dav::Optional<dav::allocated_stack> {};
 
 struct FrameRange {
     uintptr_t begin;
@@ -92,7 +92,7 @@ static uintptr_t manually_reserve_contiguous_frames(size_t num_frames)
  * @param exclude_ranges A list of ranges to exclude from the free stack.
  */
 template <size_t num_exclude_ranges>
-static void fill_free_stack(dav::array<FrameRange, num_exclude_ranges> const &exclude_ranges)
+static void fill_free_stack(dav::Array<FrameRange, num_exclude_ranges> const &exclude_ranges)
 {
     auto const in_exclude_range = [&exclude_ranges](uintptr_t frame) {
         for (auto const &exclude_range : exclude_ranges) {
@@ -151,7 +151,7 @@ void frame_allocator_init()
                        num_allocatable_frames);
 
     // fill the free stack with the allocatable frames
-    auto const exclude_ranges = dav::array<FrameRange, 1> {
+    auto const exclude_ranges = dav::Array<FrameRange, 1> {
         FrameRange {free_stack_frames_begin, free_stack_frames_end}
     };
 
