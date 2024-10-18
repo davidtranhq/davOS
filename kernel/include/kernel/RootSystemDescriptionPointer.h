@@ -1,6 +1,6 @@
-#ifndef DAVOS_KERNEL_ACPI_H
-#define DAVOS_KERNEL_ACPI_H
+#pragma once
 
+#include <cstdint>
 #include <kernel/kernel.h>
 
 /*
@@ -85,5 +85,3 @@ struct RootSystemDescriptionPointer {
     uint8_t fullChecksum;
     uint8_t reserved[3];
 } __attribute__ ((packed));
-
-#endif

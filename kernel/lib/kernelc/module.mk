@@ -12,6 +12,7 @@ OBJS_$(DIR) := $(addprefix $(DIR)/, \
 	string/memmove.o \
 	string/memset.o \
 	string/strlen.o \
+	string/strncmp.o \
 	builtin/__stack_chk_fail.o \
 )
 
