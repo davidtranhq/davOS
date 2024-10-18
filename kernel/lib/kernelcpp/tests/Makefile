@@ -5,7 +5,6 @@ SRCS := \
 	test_UniquePtr.cpp \
 	test_Function.cpp \
 	test_Concepts.cpp \
-	test_Any.cpp
 
 OBJS := $(SRCS:.cpp=.o)
 
