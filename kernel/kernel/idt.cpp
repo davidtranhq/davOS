@@ -7,6 +7,7 @@
 #include <kernel/IDTStructure.h>
 #include <kernel/kernel.h>
 #include <kernel/paging.h>
+#include <kernel/processor.hpp>
 #include <kernel/SegmentSelector.h>
 #include <kernel/TableDescriptor.h>
 #include <dav/Array.hpp>
@@ -159,7 +160,7 @@ void isr_page_fault(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 
     auto faulting_address = uintptr_t {};
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
-    paging_allocate_and_map(faulting_address, page_size, PageFlags::Write);
+    paging_allocate_and_map(faulting_address, kernelConstants::pageSize, PageFlags::Write);
 }
 
 __attribute__((interrupt))
@@ -192,6 +193,14 @@ void isr_virtualization_exception(IDTStructure::InterruptFrame *frame)
     kernel_panic("virtualization exception\n");
 }
 
+__attribute__((interrupt))
+void isr_keyboard(IDTStructure::InterruptFrame *frame)
+{
+    // Read the scan code from the keyboard controller
+    auto scan_code = processor::inb(0x60);
+    printf("keyboard interrupt: scan code: %x\n", scan_code);
+}
+
 IDTStructure idt;
 TableDescriptor idt_descriptor(IDTStructure::size, idt.address());
 
@@ -199,8 +208,7 @@ TableDescriptor idt_descriptor(IDTStructure::size, idt.address());
 
 void idt_init()
 {
-    constexpr auto num_descriptors = 20;
-    constexpr auto idt_descriptors = dav::Array<IDTStructure::GateDescriptor, num_descriptors> {{
+    constexpr auto system_idt_descriptors = dav::Array<IDTStructure::GateDescriptor, 20> {{
         {
             isr_divide_error, 
             SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
@@ -342,11 +350,27 @@ void idt_init()
             PrivilegeLevel::kernel
         }
     }};
+
+    constexpr auto user_idt_descriptors = dav::Array<IDTStructure::GateDescriptor, 1> {{
+        {
+            isr_keyboard,
+            SegmentSelector(PrivilegeLevel::user, DescriptorTable::global, GDTSegment::user_code),
+            0,
+            IDTStructure::GateType::interrupt,
+            PrivilegeLevel::user
+        }
+    }};
+
     
-    for (size_t i = 0; i < idt_descriptors.size(); ++i)
-    {
-        idt.load_gate_descriptor(i, idt_descriptors[i]);
-    }
+    for (size_t i = 0; i < system_idt_descriptors.size(); ++i)
+        idt.load_gate_descriptor(i, system_idt_descriptors[i]);
+
+    // Note: Even though the user-defined interrupt vectors start at 0x20, the vectors
+    // 0x20-0x2f are used as "sinks" for the spurious interrupts that might be generated
+    // by the PIC (even if the PIC is disabled!). So we start at 0x30.
+    
+    for (size_t i = 0; i < user_idt_descriptors.size(); ++i)
+        idt.load_gate_descriptor(i + 0x30, user_idt_descriptors[i]);
 
     // load the address of the IDTStructure Descriptor into the IDTR (IDT register)
     __asm__("lidt %0" :: "m"(*idt_descriptor.address()));

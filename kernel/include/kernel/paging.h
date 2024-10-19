@@ -12,7 +12,7 @@
 /**
  * @brief Permission, access and cache policy flags for virtual-to-physical mappings.
  */
-enum PageFlags : uint64_t
+enum class PageFlags : uint64_t
 {
     None = 0,
     Present = 1ULL,
@@ -22,6 +22,11 @@ enum PageFlags : uint64_t
     CacheDisable = 1ULL << 4,
     ExecuteDisable = 1ULL << 63, // disable instruction fetches
 };
+
+inline PageFlags operator|(PageFlags a, PageFlags b)
+{
+    return static_cast<PageFlags>(static_cast<uint64_t>(a) | static_cast<uint64_t>(b));
+}
 
 struct MemoryRegion {
     uintptr_t base {};
@@ -69,6 +74,8 @@ void paging_add_mapping(uintptr_t virtual_base,
 /**
  * @brief Allocate (not-necessarily contiguous) physical memory
  * for the specified contiguous virtual address region and map it in the page tree.
+ *
+ * If the virtual address region is already mapped, it is overwritten.
  */
 auto paging_allocate_and_map(uintptr_t virtual_base, size_t length, PageFlags flags) -> void;
 
