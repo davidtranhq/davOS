@@ -8,6 +8,7 @@
 #include <kernel/Terminal.hpp>
 #include <kernel/types.h>
 #include <kernel/paging.h>
+#include <kernel/processor.hpp>
 #include <kernel/vmm.h>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
@@ -34,6 +35,7 @@ void kernel_init()
     frame_allocator_init();
     paging_init();
     vmm_init();
+    processor::localAPIC.enableAPIC();
 }
 
 [[ noreturn ]]

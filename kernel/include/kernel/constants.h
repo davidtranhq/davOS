@@ -1,9 +1,8 @@
-#ifndef DAVOS_KERNEL_CONSTANTS
-#define DAVOS_KERNEL_CONSTANTS
+#pragma once
 
 #include <cstddef>
 
-constexpr auto page_size = size_t {0x1000};
-constexpr auto frame_size = size_t {0x1000};
-
-#endif
+namespace kernelConstants {
+constexpr auto pageSize = size_t {0x1000};
+constexpr auto frameSize = size_t {0x1000};
+}; // namespace KernelConstants

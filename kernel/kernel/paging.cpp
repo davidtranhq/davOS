@@ -141,7 +141,7 @@ void paging_init()
  */
 uint64_t page_floor(uint64_t address)
 {
-    return address - (address % page_size);
+    return address - (address % kernelConstants::pageSize);
 }
 
 /**
@@ -150,13 +150,13 @@ uint64_t page_floor(uint64_t address)
  */
 uint64_t page_ceil(uint64_t address)
 {
-    if (address % page_size == 0)
+    if (address % kernelConstants::pageSize == 0)
         return address;
     // check for overflow
     // TODO: better more portable way to do this? relies on uint64_t
-    if (UINT64_MAX - page_size < address)
+    if (UINT64_MAX - kernelConstants::pageSize < address)
         return address;
-    return page_floor(address + page_size);
+    return page_floor(address + kernelConstants::pageSize);
 }
 
 auto get_page_range(uintptr_t virtual_base, size_t length) -> PageRange
@@ -182,13 +182,13 @@ void paging_add_mapping(uintptr_t virtual_base,
     uint64_t first_frame = page_floor(physical_base);
     for (uint64_t page = first_page, frame = first_frame;
          page < last_page;
-         page += page_size, frame += frame_size) 
+         page += kernelConstants::pageSize, frame += kernelConstants::frameSize) 
     {
         page_tree->map_page_to_frame(page, frame, flags);
     }
 
 #ifdef DEBUG_BUILD
-    uint64_t num_pages = (last_page - first_page) / page_size;
+    uint64_t num_pages = (last_page - first_page) / kernelConstants::pageSize;
     DEBUG("Mapped %d virtual page(s) %x to %x (end-exclusive) to %d "
           "physical frame(s) starting at %x. %d physical frames left.\n",
           num_pages, first_page, last_page, num_pages, first_frame, available_frames());
@@ -198,8 +198,8 @@ void paging_add_mapping(uintptr_t virtual_base,
 auto paging_allocate_and_map(uintptr_t virtual_base, size_t length, PageFlags flags) -> void
 {
     const auto [first_page, last_page] = get_page_range(virtual_base, length);
-    for (auto page = first_page; page != last_page; page += page_size) {
-        paging_add_mapping(page, reinterpret_cast<uintptr_t>(allocate_frame()), page_size, flags);
+    for (auto page = first_page; page != last_page; page += kernelConstants::pageSize) {
+        paging_add_mapping(page, reinterpret_cast<uintptr_t>(allocate_frame()), kernelConstants::pageSize, flags);
     }
 }
 

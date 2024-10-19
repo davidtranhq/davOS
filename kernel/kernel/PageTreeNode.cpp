@@ -22,7 +22,7 @@ void PageTreeNode::add_child_flags(int index, PageFlags flags)
 {
     uint64_t &entry = entries_[index];
     // add flags (ensure that the present bit is set)
-    entry |= (flags | PageFlags::Present);
+    entry |= static_cast<uint64_t>(flags | PageFlags::Present);
 }
 
 void PageTreeNode::set_child_flags(int index, PageFlags flags)

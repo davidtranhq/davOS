@@ -23,6 +23,7 @@ auto deallocate_frame(void *frame_to_deallocate) -> void;
  */
 auto available_frames() -> uint64_t;
 
+// TODO: these functions don't belong here
 /**
  * @brief Get a pointer pointing to the corresponding virtual address of a kernel physical address.
  */
