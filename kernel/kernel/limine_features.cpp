@@ -31,4 +31,11 @@ volatile limine_hhdm_request hhdm_request = {
 
 struct limine_hhdm_response *hhdm_address = hhdm_request.response;
 
+volatile limine_rsdp_request rsdp_request = {
+    .id = LIMINE_RSDP_REQUEST,
+    .revision = 0
+};
+
+struct limine_rsdp_response *rsdp_address = rsdp_request.response;
+
 };

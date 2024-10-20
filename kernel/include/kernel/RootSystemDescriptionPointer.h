@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <kernel/kernel.h>
+#include <kernel/limine_features.h>
 
 /*
  * A data structure used for the ACPI programming interface.
@@ -63,7 +64,7 @@ struct RootSystemDescriptionPointer {
         return verifyFullChecksum();
     }
 
-    uint64_t rootSystemDescriptionTablePointer() const
+    uint64_t rootSDTPhysicalAddress() const
     {
         /*
          * It's likely that the RSDT and XSDT pointers point to the same location for compatibility reasons,
@@ -85,3 +86,7 @@ struct RootSystemDescriptionPointer {
     uint8_t fullChecksum;
     uint8_t reserved[3];
 } __attribute__ ((packed));
+
+namespace acpi {
+inline auto rsdp {reinterpret_cast<RootSystemDescriptionPointer*>(limine::rsdp_address->address)};
+} // namespace acpi

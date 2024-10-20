@@ -12,57 +12,36 @@ concept SystemDescriptorTable = requires(T t) {
 
 struct RootSDT {
     ACPISDTHeader header;
-    uint32_t* pointersToOtherSDTs;
+    void* pointersToOtherSDTs;
 
     /**
      * @brief The number of system descriptor tables that are pointed to by this table.
      */
-    std::size_t pointersToOtherSDTsSize() const
+    std::size_t pointersToOtherSDTsSize(int acpiRevisionNumber) const
     {
-        return (header.length - sizeof(header)) / sizeof(uint32_t);
+        return (header.length - sizeof(header)) / bytesPerPointer(acpiRevisionNumber);
     }
 
     /**
      * @brief Find a system descriptor table with a given 4-byte signature.
+     *
+     * The address returned is the physical address of the table.
      */
     template<SystemDescriptorTable SDT>
-    SDT* findSDTWithSignature(const char* signature) const
+    SDT* findSDTWithSignature(const char* signature, int acpiRevisionNumber) const
     {
-        const auto numTables = pointersToOtherSDTsSize();
+        const auto numTables = pointersToOtherSDTsSize(acpiRevisionNumber);
         for (std::size_t i = 0; i < numTables; ++i) {
-            const auto sdt = reinterpret_cast<SDT*>(pointersToOtherSDTs[i]);
+            const auto sdt = reinterpret_cast<SDT*>(static_cast<char *>(pointersToOtherSDTs)[i * bytesPerPointer(acpiRevisionNumber)]);
             if (!strncmp(sdt->header.signature, signature, 4))
                 return sdt;
         }
         return nullptr;
     }
-};
 
-struct ExtendedSDT {
-    ACPISDTHeader header;
-    uint64_t* pointersToOtherSDTs;
-
-    /**
-     * @brief The number of system descriptor tables that are pointed to by this table.
-     */
-    std::size_t pointersToOtherSDTsSize() const
+private:
+    inline std::size_t bytesPerPointer(int acpiRevisionNumber) const
     {
-        return (header.length - sizeof(header)) / sizeof(uint64_t);
-    }
-
-
-    /**
-     * @brief Find a system descriptor table with a given 4-byte signature.
-     */
-    template<SystemDescriptorTable SDT>
-    SDT* findSDTWithSignature(const char* signature) const
-    {
-        const auto numTables = pointersToOtherSDTsSize();
-        for (std::size_t i = 0; i < numTables; ++i) {
-            const auto sdt = reinterpret_cast<SDT*>(pointersToOtherSDTs[i]);
-            if (!strncmp(sdt->header.signature, signature, 4))
-                return sdt;
-        }
-        return nullptr;
+        return acpiRevisionNumber == 0 ? sizeof(uint32_t) : sizeof(uint64_t);
     }
 };
