@@ -17,14 +17,10 @@ auto vmm_init() -> void {
         if (size == 0) {
             continue;
         }
-        add_virtual_memory(reinterpret_cast<void *>(base), size);
+        allocator.add_memory(reinterpret_cast<allocated_type *>(base), size);
         DEBUG("Initialized VMM with region at %x with size %x\n", base, size);
     }
     DEBUG("Initialized VMM.\n");
-}
-
-auto add_virtual_memory(void *base, size_t size) -> void {
-    allocator.add_memory(reinterpret_cast<allocated_type *>(base), size);
 }
 
 auto vmalloc(size_t size) -> void * {
