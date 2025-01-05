@@ -1,6 +1,4 @@
-#ifndef DAVOS_KERNEL_FREE_LIST_ALLOCATOR_H_INCLUDED
-#define DAVOS_KERNEL_FREE_LIST_ALLOCATOR_H_INCLUDED
-
+#pragma once
 #include <cstddef>
 #include <kernel/Allocator.h>
 #include <kernel/kernel.h>
@@ -10,8 +8,6 @@ class FreeListAllocator : public Allocator<FreeListAllocator<T>>
 {
 public:
     FreeListAllocator() = default;
-
-    // FreeListAllocator(T *base, std::size_t size);
     
     auto allocate_impl(std::size_t request) -> T *;
     
@@ -28,6 +24,4 @@ private:
     FreeBlockHeader *head = nullptr;
 };
 
-#include <kernel/FreeListAllocator.tpp> 
-
-#endif // DAVOS_KERNEL_FREE_LIST_ALLOCATOR_H_INCLUDED
+#include <kernel/FreeListAllocator.cpp> 

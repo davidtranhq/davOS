@@ -27,6 +27,6 @@ private:
     dav::optional<dav::UserAllocatedStack<T *>> free_stack;
 };
 
-#include <kernel/FreeStackAllocator.tpp>
+#include <kernel/FreeStackAllocator.cpp>
 
 #endif // DAVOS_KERNEL_FREE_STACK_ALLOCATOR_H_INCLUDED
