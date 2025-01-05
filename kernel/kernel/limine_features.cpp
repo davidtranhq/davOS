@@ -37,5 +37,4 @@ volatile limine_rsdp_request rsdp_request = {
 };
 
 struct limine_rsdp_response *rsdp_address = rsdp_request.response;
-
 };

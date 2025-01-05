@@ -46,7 +46,6 @@ public:
     auto get_child_flags(int index) -> PageFlags;
 
 private:
-    // fill with zeros
     uint64_t entries_[512] = {};
 };
 
