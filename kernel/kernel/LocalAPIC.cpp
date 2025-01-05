@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <kernel/constants.h>
 #include <kernel/frame_allocator.h>
+#include <kernel/kernel.h>
 #include <kernel/LocalAPIC.hpp>
 #include <kernel/paging.h>
 #include <kernel/processor.hpp>
@@ -59,8 +60,9 @@ void LocalAPIC::enableAPIC()
 {
     const auto physicalAPICAddress = processor::localAPICBaseAddress();
     const auto virtualAPICAddress = kernel_physical_to_virtual(physicalAPICAddress);
+    kernel_assert(processor::hasPAT(), "Processor does not support PAT");
     paging_add_mapping(virtualAPICAddress, physicalAPICAddress, kernelConstants::pageSize, PageFlags::Write | PageFlags::CacheDisable);
-    m_baseAddress = reinterpret_cast<Registers*>(physicalAPICAddress);
+    m_baseAddress = reinterpret_cast<Registers*>(virtualAPICAddress);
     processor::hardwareEnableLocalAPICAndSetBaseAddress(physicalAPICAddress);
 
     // In addition to disabling the PIC, we also remap the PIC1 and PIC2 interrupt requests 
@@ -70,10 +72,16 @@ void LocalAPIC::enableAPIC()
     processor::disablePIC();
     processor::remapPIC(0x20, 0x28);
 
+    // Enable interrupts
+    asm volatile("sti");
+
     
     // The spurious interrupt vector is the vector that the local APIC will use to signal interrupts
     // that are not associated with a specific interrupt vector. This is typically set to 0xFF.
     // The 16th bit of the spurious interrupt vector is the APIC software enable bit.
     // This bit must be set to 1 to enable the local APIC.
     m_baseAddress->spuriousInterruptVector = 0x1FF;
+
+    // Set the task priority to 0 to allow all interrupts to be delivered.
+    m_baseAddress->taskPriority = 0;
 }

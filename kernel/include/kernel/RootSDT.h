@@ -4,6 +4,9 @@
 #include <dav/array.hpp>
 #include <dav/concepts.hpp>
 #include <kernel/ACPISDTHeader.h>
+#include <kernel/frame_allocator.h>
+#include <kernel/kernel.h>
+#include <string.h>
 
 template<typename T>
 concept SystemDescriptorTable = requires(T t) {
@@ -17,7 +20,7 @@ struct RootSDT {
     /**
      * @brief The number of system descriptor tables that are pointed to by this table.
      */
-    std::size_t pointersToOtherSDTsSize(int acpiRevisionNumber) const
+    std::size_t numPointersToOtherSDTs(int acpiRevisionNumber) const
     {
         return (header.length - sizeof(header)) / bytesPerPointer(acpiRevisionNumber);
     }
@@ -30,11 +33,17 @@ struct RootSDT {
     template<SystemDescriptorTable SDT>
     SDT* findSDTWithSignature(const char* signature, int acpiRevisionNumber) const
     {
-        const auto numTables = pointersToOtherSDTsSize(acpiRevisionNumber);
+        const auto numTables = numPointersToOtherSDTs(acpiRevisionNumber);
         for (std::size_t i = 0; i < numTables; ++i) {
-            const auto sdt = reinterpret_cast<SDT*>(static_cast<char *>(pointersToOtherSDTs)[i * bytesPerPointer(acpiRevisionNumber)]);
-            if (!strncmp(sdt->header.signature, signature, 4))
-                return sdt;
+            if (bytesPerPointer(acpiRevisionNumber) == 4) {
+                auto sdt = reinterpret_cast<SDT*>(reinterpret_cast<const uint32_t*>(&pointersToOtherSDTs)[i]);
+                if (!strncmp(sdt->header.signature, signature, 4))
+                    return sdt;
+            } else {
+                auto sdt = reinterpret_cast<SDT*>(reinterpret_cast<const uint64_t*>(&pointersToOtherSDTs)[i]);
+                if (!strncmp(sdt->header.signature, signature, 4))
+                    return sdt;
+            }
         }
         return nullptr;
     }

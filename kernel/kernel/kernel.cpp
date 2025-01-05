@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <kernel/APICManager.hpp>
 #include <kernel/frame_allocator.h>
 #include <kernel/gdt.h>
 #include <kernel/idt.h>
@@ -36,6 +37,9 @@ void kernel_init()
     paging_init();
     vmm_init();
     processor::localAPIC.enableAPIC();
+    APICManager apicManager;
+    apicManager.initialize();
+    apicManager.redirectIrq(1, 0x30);
 }
 
 [[ noreturn ]]

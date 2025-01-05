@@ -44,6 +44,13 @@ bool processor::hasLocalAPIC()
     return edx & static_cast<uint32_t>(CpuIdFeature::EDX_APIC);
 }
 
+bool processor::hasPAT()
+{
+    uint32_t eax, unused, edx;
+    __get_cpuid(1, &eax, &unused, &unused, &edx);
+    return edx & static_cast<uint32_t>(CpuIdFeature::EDX_PAT);
+}
+
 /**
  * @brief Get the memory-mapped physical base address of the local APIC.
  * The address is aligned to a 4 KiB boundary.
@@ -55,7 +62,7 @@ uintptr_t processor::localAPICBaseAddress()
     uint32_t low, high;
     readMSR(0x1B, &low, &high);
 #ifdef __PHYSICAL_MEMORY_EXTENSION__
-    return (low & 0xfffff000) | ((high & 0x0f) << 32);
+    return static_cast<uint64_t>(low & 0xfffff000) | (static_cast<uint64_t>((high & 0x0f)) << 32);
 #else
     return low & 0xfffff000;
 #endif

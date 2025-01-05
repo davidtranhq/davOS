@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <dav/algorithm.hpp>
+#include <kernel/APICManager.hpp>
 #include <kernel/Allocator.h>
 #include <kernel/frame_allocator.h>
 #include <kernel/FreeListAllocator.h>
@@ -102,6 +103,14 @@ auto test_allocator() -> void {
     printf("allocator test: PASSED\n");
 }
 
+void test_local_apic()
+{
+    printf("running local APIC test...\n");
+    APICManager().sendInterprocessorInterrupt(0, 0xff);
+    printf("local APIC test: PASSED\n");
+}
+
+// TODO: Make this into a real suite that errors out on failure
 void run_all_tests()
 {
     printf("\n=========================\n");
@@ -113,6 +122,7 @@ void run_all_tests()
     // test_stack_smash();
     test_paging();
     test_allocator<FreeListAllocator<char>>();
+    test_local_apic();
     printf("\nPASSED ALL TESTS\n");
     printf("=========================\n\n");
 }

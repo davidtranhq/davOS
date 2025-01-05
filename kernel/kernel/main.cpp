@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include <kernel/APICManager.hpp>
+#include <kernel/frame_allocator.h>
 #include <kernel/kernel.h>
 #include <kernel/limine.h>
 #include <kernel/macros.h>
@@ -7,7 +9,6 @@
 #include <kernel/tests.h>
 #include <kernel/types.h> // LinkerAddress
 
-#include <kernel/frame_allocator.h>
 
 extern LinkerAddress kernel_stack_start;
 
@@ -23,7 +24,6 @@ void kernel_main()
     run_all_tests();
     
     printf("Hello, world!\n");
-    print_memory_map();
 
     kernel_hang();
 }

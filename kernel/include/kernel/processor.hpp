@@ -117,6 +117,11 @@ void writeMSR(uint32_t msr, uint32_t low, uint32_t high);
 bool hasLocalAPIC();
 
 /**
+ * @brief Check if this processor has a page-attribute table.
+ */
+bool hasPAT();
+
+/**
  * @brief Get the memory-mapped physical base address of the local APIC.
  * 
  * @return The physical base address of the local APIC.

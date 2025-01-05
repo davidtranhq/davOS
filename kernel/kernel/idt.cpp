@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 
+#define INTERPROCESSOR_INTERRUPT_TEST
 #ifdef TEST_BUILD
 #include <stdio.h>
 #endif
@@ -125,38 +126,38 @@ void isr_general_protection(IDTStructure::InterruptFrame *frame, uint64_t error_
 __attribute__((interrupt))
 void isr_page_fault(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 {
-    // const char *p_flag_msg = error_code & 1
-    //     ? "The fault was caused by a page-level protection violation"
-    //     : "The fault was caused by a non-present page";
-    
-    // const char *wr_flag_msg = error_code & 2
-    //     ? "The access causing the fault was a write"
-    //     : "The access causing the fault was a read";
-
-    // const char *us_flag_msg = error_code & 4
-    //     ? "A user-mode access caused the fault"
-    //     : "A supervisor-mode access caused the fault";
-
-    // const char *rsvd_flag_msg = error_code & 8
-    //     ? "The fault was not caused by a reserved bit violation"
-    //     : "The fault was caused by a reserved bit set to 1 in some paging-structure entry";
-
-    // const char *id_flag_msg = error_code & 16
-    //     ? "The fault was caused by an instruction fetch"
-    //     : "The fault was not caused by an instruction fetch";
-
-    // const char *pk_flag_msg = error_code & 32
-    //     ? "There was a protection-key violation"
-    //     : "The fault was not caused by protection keys";
-
-    // const char *sgx_flag_msg = error_code & (1ULL << 15)
-    //     ? "The fault resulted from violation of SGX-specific access-control requirements"
-    //     : "The fault is not related to SGX";
-
-    // kernel_panic(
-    //     "page fault\n\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
-    //     p_flag_msg, wr_flag_msg, us_flag_msg, rsvd_flag_msg, id_flag_msg, pk_flag_msg, sgx_flag_msg
-    // );
+     /*const char *p_flag_msg = error_code & 1*/
+     /*    ? "The fault was caused by a page-level protection violation"*/
+     /*    : "The fault was caused by a non-present page";*/
+     /**/
+     /*const char *wr_flag_msg = error_code & 2*/
+     /*    ? "The access causing the fault was a write"*/
+     /*    : "The access causing the fault was a read";*/
+     /**/
+     /*const char *us_flag_msg = error_code & 4*/
+     /*    ? "A user-mode access caused the fault"*/
+     /*    : "A supervisor-mode access caused the fault";*/
+     /**/
+     /*const char *rsvd_flag_msg = error_code & 8*/
+     /*    ? "The fault was not caused by a reserved bit violation"*/
+     /*    : "The fault was caused by a reserved bit set to 1 in some paging-structure entry";*/
+     /**/
+     /*const char *id_flag_msg = error_code & 16*/
+     /*    ? "The fault was caused by an instruction fetch"*/
+     /*    : "The fault was not caused by an instruction fetch";*/
+     /**/
+     /*const char *pk_flag_msg = error_code & 32*/
+     /*    ? "There was a protection-key violation"*/
+     /*    : "The fault was not caused by protection keys";*/
+     /**/
+     /*const char *sgx_flag_msg = error_code & (1ULL << 15)*/
+     /*    ? "The fault resulted from violation of SGX-specific access-control requirements"*/
+     /*    : "The fault is not related to SGX";*/
+     /**/
+     /*kernel_panic(*/
+     /*    "page fault\n\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",*/
+     /*    p_flag_msg, wr_flag_msg, us_flag_msg, rsvd_flag_msg, id_flag_msg, pk_flag_msg, sgx_flag_msg*/
+     /*);*/
 
     auto faulting_address = uintptr_t {};
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
@@ -192,6 +193,14 @@ void isr_virtualization_exception(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("virtualization exception\n");
 }
+
+#ifdef INTERPROCESSOR_INTERRUPT_TEST
+__attribute__((interrupt))
+void isr_interprocessor_interrupt(IDTStructure::InterruptFrame *frame)
+{
+    printf("interprocessor interrupt test: PASSED\n");
+}
+#endif
 
 __attribute__((interrupt))
 void isr_keyboard(IDTStructure::InterruptFrame *frame)
@@ -351,13 +360,14 @@ void idt_init()
         }
     }};
 
+    // User-defined interrupt vectors ("User" in this sense doesn't refer to privilege level, but rather "non-builtin")
     constexpr auto user_idt_descriptors = dav::Array<IDTStructure::GateDescriptor, 1> {{
         {
             isr_keyboard,
-            SegmentSelector(PrivilegeLevel::user, DescriptorTable::global, GDTSegment::user_code),
+            SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
             0,
             IDTStructure::GateType::interrupt,
-            PrivilegeLevel::user
+            PrivilegeLevel::kernel
         }
     }};
 
@@ -371,6 +381,16 @@ void idt_init()
     
     for (size_t i = 0; i < user_idt_descriptors.size(); ++i)
         idt.load_gate_descriptor(i + 0x30, user_idt_descriptors[i]);
+
+#ifdef INTERPROCESSOR_INTERRUPT_TEST
+    idt.load_gate_descriptor(0xff, {
+        isr_interprocessor_interrupt,
+        SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
+        0,
+        IDTStructure::GateType::interrupt,
+        PrivilegeLevel::kernel
+    });
+#endif
 
     // load the address of the IDTStructure Descriptor into the IDTR (IDT register)
     __asm__("lidt %0" :: "m"(*idt_descriptor.address()));

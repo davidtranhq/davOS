@@ -32,29 +32,24 @@ struct RootSystemDescriptionPointer {
         return true;
     }
 
-    uint64_t versionOnePropertySum() const
-    {
-        uint64_t sum = partialChecksum + acpiRevision + rsdtPhysicalAddress;
-        for (int i = 0; i < signatureLength; ++i)
-            sum += signature[i];
-        for (int i = 0; i < oemIdLength; ++i)
-            sum += oemId[i];
-        return sum;
-    }
-
-    uint64_t versionTwoPropertySum() const
-    {
-        return rsdpSize + xsdtPhysicalAddress + fullChecksum + reserved[0] + reserved[1] + reserved[2];
-    }
-
     bool verifyPartialChecksum() const
     {
-        return !(versionOnePropertySum() & 0xff);
+        uint8_t sum {0};
+        auto firstByte = reinterpret_cast<const uint8_t*>(this);
+        auto lastByte = reinterpret_cast<const uint8_t*>(&rsdpSize);
+        for (auto byte = firstByte; byte < lastByte; ++byte)
+            sum += *byte;
+        return !sum;
     }
 
     bool verifyFullChecksum() const
     {
-        return !((versionOnePropertySum() + versionTwoPropertySum()) & 0xff);
+        uint8_t sum {0};
+        auto firstByte = reinterpret_cast<const uint8_t*>(this);
+        auto lastByte = firstByte + rsdpSize;
+        for (auto byte = firstByte; byte < lastByte; ++byte)
+            sum += *byte;
+        return !sum;
     }
 
     bool validate() const
@@ -76,9 +71,9 @@ struct RootSystemDescriptionPointer {
         return acpiRevision == 0 ? rsdtPhysicalAddress : xsdtPhysicalAddress;
     }
 
-    char signature[8];
+    uint8_t signature[8];
     uint8_t partialChecksum;
-    char oemId[6];
+    uint8_t oemId[6];
     uint8_t acpiRevision;
     uint32_t rsdtPhysicalAddress;
     uint32_t rsdpSize;
@@ -87,6 +82,3 @@ struct RootSystemDescriptionPointer {
     uint8_t reserved[3];
 } __attribute__ ((packed));
 
-namespace acpi {
-inline auto rsdp {reinterpret_cast<RootSystemDescriptionPointer*>(limine::rsdp_address->address)};
-} // namespace acpi

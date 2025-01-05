@@ -3,6 +3,7 @@ SUBMODULES := lib/kernelc lib/kernelcpp
 
 INCLUDE_DIRS += $(DIR)/include
 OBJS += $(addprefix $(DIR)/, \
+	kernel/APICManager.o \
 	kernel/Frame.o \
 	kernel/frame_allocator.o \
 	kernel/gdt.o \
