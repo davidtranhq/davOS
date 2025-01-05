@@ -16,8 +16,8 @@ concept ImplicitConvertible = requires(void (&functionAcceptingTo)(To), From fro
 
 template<typename T>
 concept Returnable = requires {
-    [] () -> T {};
-};
+    []() -> T { return {}; };
+} || IsSame<T, void>::value;
 
 template<typename From, typename To>
 concept Convertible = ImplicitConvertible<From, To> && Returnable<To>;
