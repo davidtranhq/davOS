@@ -1,0 +1,19 @@
+[
+ {
+  "directory": "/Users/david/src/davOS/kernel/lib/kpp/tests",
+  "arguments": [
+   "clang++",
+   "-I../../../../external/gtest/googletest/include",
+   "-Wall",
+   "-Werror",
+   "-Wpedantic",
+   "-O3",
+   "-std=c++20",
+   "-c",
+   "main.cpp",
+   "-o",
+   "main.o"
+  ],
+  "file": "main.cpp"
+ }
+]

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <dav/optional.hpp>
-#include <dav/StringView.hpp>
+#include <kpp/optional.hpp>
+#include <kpp/StringView.hpp>
 #include <kernel/BitmapFont.hpp>
 #include <kernel/kernel.h>
 #include <kernel/limine.h>
@@ -65,7 +65,7 @@ class Terminal
 		std::size_t size() const { return m_size; }
 
 	private:
-		dav::Array<T, bufferCapacity> m_data;
+		kpp::Array<T, bufferCapacity> m_data;
 		std::size_t m_front = 0;
 		std::size_t m_size = 0;
 	};
@@ -94,7 +94,7 @@ public:
      * Write the given string to the end of the text buffer. Depending on the configured
      * scroll mode, the viewport may be updated.
      */
-    void write(dav::StringView<char>);
+    void write(kpp::StringView<char>);
 
     /**
      * Scroll the viewport up the specified number of lines (so that previous lines become
@@ -149,5 +149,5 @@ private:
 
 namespace KernelTerminal {
 void initialize();
-inline dav::Optional<Terminal> instance {};
+inline kpp::Optional<Terminal> instance {};
 } // namespace KernelTerminal

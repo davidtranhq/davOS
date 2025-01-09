@@ -1,4 +1,5 @@
-#include <dav/math.hpp>
+#include <kpp/cmath.hpp>
+#include <kpp/StringView.hpp>
 #include <kernel/Terminal.hpp>
 
 Terminal::Terminal(const Framebuffer& framebuffer, const VGAFont& font)
@@ -13,7 +14,7 @@ void Terminal::write(char character)
         m_characterBuffer.push('\n');
 }
 
-void Terminal::write(dav::StringView<char> string)
+void Terminal::write(kpp::StringView<char> string)
 {
     for (auto character : string)
         write(character);
@@ -66,7 +67,7 @@ void Terminal::scrollUp(int numberOfLines)
     if (!numberOfLines)
         return;
     const bool scrollDown = numberOfLines < 0;
-    numberOfLines = dav::abs(numberOfLines);
+    numberOfLines = kpp::abs(numberOfLines);
     for (int linesScrolled = 0; linesScrolled < numberOfLines; ++linesScrolled) {
 		auto firstCharacterOfNextLine = m_firstVisibleCharacter;
         if (scrollDown) {

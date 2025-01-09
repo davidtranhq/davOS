@@ -8,20 +8,19 @@
  * Initially, the stack contains the addresses of all available after booting.
  */
 
-#include <stddef.h>
-#include <stdio.h>
+#include <cstddef>
+#include <kpp/cstdio.hpp>
 
-#include <dav/algorithm.hpp>
-#include <dav/optional.hpp>
-#include <dav/allocated_stack.hpp>
-#include <dav/allocated_vector.hpp>
+#include <kpp/algorithm.hpp>
+#include <kpp/optional.hpp>
+#include <kpp/NonOwningStack.hpp>
 #include <kernel/constants.h>
 #include <kernel/frame_allocator.h>
 #include <kernel/kernel.h>
 #include <kernel/limine_features.h>
 #include <kernel/macros.h>
 
-static auto free_stack = dav::Optional<dav::allocated_stack> {};
+static auto free_stack = kpp::Optional<kpp::NonOwningStack> {};
 
 struct FrameRange {
     uintptr_t begin;
@@ -92,7 +91,7 @@ static uintptr_t manually_reserve_contiguous_frames(size_t num_frames)
  * @param exclude_ranges A list of ranges to exclude from the free stack.
  */
 template <size_t num_exclude_ranges>
-static void fill_free_stack(dav::Array<FrameRange, num_exclude_ranges> const &exclude_ranges)
+static void fill_free_stack(kpp::Array<FrameRange, num_exclude_ranges> const &exclude_ranges)
 {
     auto const in_exclude_range = [&exclude_ranges](uintptr_t frame) {
         for (auto const &exclude_range : exclude_ranges) {
@@ -151,7 +150,7 @@ void frame_allocator_init()
                        num_allocatable_frames);
 
     // fill the free stack with the allocatable frames
-    auto const exclude_ranges = dav::Array<FrameRange, 1> {
+    auto const exclude_ranges = kpp::Array<FrameRange, 1> {
         FrameRange {free_stack_frames_begin, free_stack_frames_end}
     };
 
@@ -234,7 +233,7 @@ void print_memory_map()
     for (size_t i = 0; i < limine::memory_map->entry_count; ++i)
     {
         struct limine_memmap_entry *entry = limine::memory_map->entries[i];
-        printf("base: %x, limit: %x, type: %s\n", entry->base, entry->length,
+        kpp::printf("base: %x, limit: %x, type: %s\n", entry->base, entry->length,
             limine_memmap_type(entry->type));
     }
 }

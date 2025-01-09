@@ -1,4 +1,4 @@
-#include <string.h>
+#include <kpp/cstring.hpp>
 #include <cstddef>
 
 #include <kernel/constants.h>
@@ -10,9 +10,9 @@
 #include <kernel/processor.hpp>
 #include <kernel/SegmentSelector.h>
 #include <kernel/TableDescriptor.h>
-#include <dav/Array.hpp>
+#include <kpp/Array.hpp>
 
-#include <stdio.h>
+#include <kpp/cstdio.hpp>
 
 #define INTERPROCESSOR_INTERRUPT_TEST
 #ifdef TEST_BUILD
@@ -198,7 +198,7 @@ void isr_virtualization_exception(IDTStructure::InterruptFrame *frame)
 __attribute__((interrupt))
 void isr_interprocessor_interrupt(IDTStructure::InterruptFrame *frame)
 {
-    printf("interprocessor interrupt test: PASSED\n");
+    kpp::printf("interprocessor interrupt test: PASSED\n");
 }
 #endif
 
@@ -207,7 +207,7 @@ void isr_keyboard(IDTStructure::InterruptFrame *frame)
 {
     // Read the scan code from the keyboard controller
     auto scan_code = processor::inb(0x60);
-    printf("keyboard interrupt: scan code: %x\n", scan_code);
+    kpp::printf("keyboard interrupt: scan code: %x\n", scan_code);
 }
 
 IDTStructure idt;
@@ -217,7 +217,7 @@ TableDescriptor idt_descriptor(IDTStructure::size, idt.address());
 
 void idt_init()
 {
-    constexpr auto system_idt_descriptors = dav::Array<IDTStructure::GateDescriptor, 20> {{
+    constexpr auto system_idt_descriptors = kpp::Array<IDTStructure::GateDescriptor, 20> {{
         {
             isr_divide_error, 
             SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),
@@ -361,7 +361,7 @@ void idt_init()
     }};
 
     // User-defined interrupt vectors ("User" in this sense doesn't refer to privilege level, but rather "non-builtin")
-    constexpr auto user_idt_descriptors = dav::Array<IDTStructure::GateDescriptor, 1> {{
+    constexpr auto user_idt_descriptors = kpp::Array<IDTStructure::GateDescriptor, 1> {{
         {
             isr_keyboard,
             SegmentSelector(PrivilegeLevel::kernel, DescriptorTable::global, GDTSegment::kernel_code),

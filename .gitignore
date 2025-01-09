@@ -6,4 +6,5 @@ sysroot
 .cache/
 .ccls-cache/
 *.dSYM
-test_kernelcpp
+*.a
+test_kpp

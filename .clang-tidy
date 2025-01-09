@@ -1,0 +1,11 @@
+Checks: |
+  modernize-*,
+    -modernize-use-trailing-return-type,
+  performance-*,
+  readability-*,
+  cppcoreguidelines-*,
+  bugprone-*,
+  -clang-analyzer-alpha.*
+HeaderFilterRegex: '.*'
+AnalyzeTemporaryDtors: true
+UseColor: true

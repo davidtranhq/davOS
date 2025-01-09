@@ -1,16 +1,16 @@
 #pragma once
 
 #include <cstdint>
-#include <dav/array.hpp>
-#include <dav/concepts.hpp>
+#include <concepts>
+#include <kpp/array.hpp>
 #include <kernel/ACPISDTHeader.h>
 #include <kernel/frame_allocator.h>
 #include <kernel/kernel.h>
-#include <string.h>
+#include <kpp/cstring.hpp>
 
 template<typename T>
 concept SystemDescriptorTable = requires(T t) {
-    { t.header } -> dav::Convertible<ACPISDTHeader>;
+    { t.header } -> std::convertible_to<ACPISDTHeader>;
 };
 
 struct RootSDT {
@@ -37,11 +37,11 @@ struct RootSDT {
         for (std::size_t i = 0; i < numTables; ++i) {
             if (bytesPerPointer(acpiRevisionNumber) == 4) {
                 auto sdt = reinterpret_cast<SDT*>(reinterpret_cast<const uint32_t*>(&pointersToOtherSDTs)[i]);
-                if (!strncmp(sdt->header.signature, signature, 4))
+                if (!kpp::strncmp(sdt->header.signature, signature, 4))
                     return sdt;
             } else {
                 auto sdt = reinterpret_cast<SDT*>(reinterpret_cast<const uint64_t*>(&pointersToOtherSDTs)[i]);
-                if (!strncmp(sdt->header.signature, signature, 4))
+                if (!kpp::strncmp(sdt->header.signature, signature, 4))
                     return sdt;
             }
         }

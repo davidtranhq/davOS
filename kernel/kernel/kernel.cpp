@@ -1,5 +1,5 @@
 #include <stdarg.h>
-#include <stdio.h>
+#include <kpp/cstdio.hpp>
 
 #include <kernel/APICManager.hpp>
 #include <kernel/frame_allocator.h>
@@ -45,10 +45,10 @@ void kernel_init()
 [[ noreturn ]]
 void kernel_panic(const char *fmt, ...)
 {
-    printf("KERNEL PANIC: ");
+    kpp::printf("KERNEL PANIC: ");
     va_list args;
     va_start(args, fmt);
-    vprintf(fmt, args);
+    kpp::vprintf(fmt, args);
     va_end(args);
 
     kernel_hang();

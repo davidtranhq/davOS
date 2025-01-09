@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <kpp/cstdio.hpp>
 
 #include <kernel/APICManager.hpp>
 #include <kernel/frame_allocator.h>
@@ -23,7 +23,7 @@ void kernel_main()
 
     run_all_tests();
     
-    printf("Hello, world!\n");
+    kpp::printf("Hello, world!\n");
 
     kernel_hang();
 }

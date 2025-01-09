@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <dav/Array.hpp>
-#include <dav/Span.hpp>
+#include <kpp/Array.hpp>
+#include <kpp/Span.hpp>
 
 template<std::size_t bytesPerCharacter>
 struct BitmapFont {
@@ -10,13 +10,13 @@ struct BitmapFont {
 	const size_t characterHeight = bytesPerCharacter;
 	size_t characterLeftPadding = 1;
 	size_t characterTopPadding = 1;
-	dav::Array<uint8_t, 256 * bytesPerCharacter> data;
+	kpp::Array<uint8_t, 256 * bytesPerCharacter> data;
 
 	inline std::size_t characterTotalWidth() const { return characterWidth + characterLeftPadding; }
 	inline std::size_t characterTotalHeight() const { return characterHeight + characterTopPadding; }
-	inline dav::Span<uint8_t> characterBitmap(char character) const
+	inline kpp::Span<uint8_t> characterBitmap(char character) const
 	{
-		return dav::Span<uint8_t>(data.data() + character * characterHeight, characterHeight);
+		return kpp::Span<uint8_t>(data.data() + character * characterHeight, characterHeight);
 	}
 };
 

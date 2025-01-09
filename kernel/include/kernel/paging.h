@@ -7,7 +7,7 @@
 #define DAVOS_KERNEL_PAGING_H_INCLUDED
 
 #include <stdint.h>
-#include <dav/array.hpp>
+#include <kpp/array.hpp>
 
 /**
  * @brief Permission, access and cache policy flags for virtual-to-physical mappings.
@@ -85,7 +85,7 @@ auto paging_allocate_and_map(uintptr_t virtual_base, size_t length, PageFlags fl
  * 
  * @return frg::array<MemoryRegion> 
  */
-auto paging_get_initial_free_regions() -> dav::Array<MemoryRegion, paging_num_free_memory_regions>;
+auto paging_get_initial_free_regions() -> kpp::Array<MemoryRegion, paging_num_free_memory_regions>;
 
 /**
  * @brief Get information about the translation for a given virtual address.

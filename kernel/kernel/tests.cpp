@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+#include <kpp/cstdio.hpp>
+#include <cstdint>
+#include <kpp/cstring.hpp>
 
-#include <dav/algorithm.hpp>
+#include <kpp/algorithm.hpp>
 #include <kernel/APICManager.hpp>
 #include <kernel/Allocator.h>
 #include <kernel/frame_allocator.h>
@@ -35,14 +35,14 @@ GlobalConstructorTest global_constructor_test;
 [[ gnu::noinline ]]
 void test_stack_smash()
 {
-    printf("running stack smash test...\n");
+    kpp::printf("running stack smash test...\n");
 	char arr[10];
-	memset(arr, 0xa9, 12);
+    kpp::memset(arr, 0xa9, 12);
 }
 
 void test_interrupt_handling()
 {
-    printf("running interrupt handling test...\n");
+    kpp::printf("running interrupt handling test...\n");
     // interrupt 3 is the BREAKPOINT exception, it is modified in the TEST_BUILD to
     // run the interrupt handling test
     __asm__("int $3");
@@ -50,15 +50,15 @@ void test_interrupt_handling()
 
 void test_global_constructor()
 {
-    printf("running global constructor test...\n");
+    kpp::printf("running global constructor test...\n");
     if (global_constructor_test.was_constructed())
-        printf("global constructor test: PASSED\n");
+        kpp::printf("global constructor test: PASSED\n");
     
 }
 
 void test_paging()
 {
-    printf("running paging test...\n");
+    kpp::printf("running paging test...\n");
     auto new_frame = reinterpret_cast<uintptr_t>(allocate_frame());
 #ifdef DEBUG_BUILD
     DEBUG("Allocated physical frame at %p\n", new_frame);
@@ -74,24 +74,24 @@ void test_paging()
     *write_ptr = test_value;
     if (*read_ptr == test_value)
     {
-        printf("paging test: PASSED\n");
+        kpp::printf("paging test: PASSED\n");
     }
     else
     {
-        printf("paging test: FAILED\n");
-        printf("read %d at %p, expected %d\n", *read_ptr, new_frame, test_value);
+        kpp::printf("paging test: FAILED\n");
+        kpp::printf("read %d at %p, expected %d\n", *read_ptr, new_frame, test_value);
     }
 }
 
 template <typename Alloc>
 auto test_allocator() -> void {
-    printf("running allocator test...\n");
+    kpp::printf("running allocator test...\n");
     auto allocator = Alloc {};
     const auto free_regions = paging_get_initial_free_regions();
     const auto free_region = free_regions[0];
     constexpr auto free_region_max_size = size_t {0x1000};
     allocator.add_memory(reinterpret_cast<Alloc::value_type *>(free_region.base),
-        dav::max(free_region.size, free_region_max_size));
+        kpp::max(free_region.size, free_region_max_size));
 
     const auto p1 = allocator.allocate(0x20);
     const auto p2 = allocator.allocate(0x30);
@@ -100,21 +100,21 @@ auto test_allocator() -> void {
     allocator.deallocate(p3);
     allocator.deallocate(p2);
     allocator.deallocate(p1);
-    printf("allocator test: PASSED\n");
+    kpp::printf("allocator test: PASSED\n");
 }
 
 void test_local_apic()
 {
-    printf("running local APIC test...\n");
+    kpp::printf("running local APIC test...\n");
     APICManager().sendInterprocessorInterrupt(0, 0xff);
-    printf("local APIC test: PASSED\n");
+    kpp::printf("local APIC test: PASSED\n");
 }
 
 // TODO: Make this into a real suite that errors out on failure
 void run_all_tests()
 {
-    printf("\n=========================\n");
-    printf("RUNNING TEST SUITE...\n\n");
+    kpp::printf("\n=========================\n");
+    kpp::printf("RUNNING TEST SUITE...\n\n");
     test_global_constructor();
     // the following two tests cause kernel panics on success, so they are
     // uncommented here
@@ -123,6 +123,6 @@ void run_all_tests()
     test_paging();
     test_allocator<FreeListAllocator<char>>();
     test_local_apic();
-    printf("\nPASSED ALL TESTS\n");
-    printf("=========================\n\n");
+    kpp::printf("\nPASSED ALL TESTS\n");
+    kpp::printf("=========================\n\n");
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <dav/Array.hpp>
+#include <kpp/Array.hpp>
 #include <kernel/ACPISDTHeader.h>
 
 /**
@@ -88,7 +88,7 @@ public:
 
 private:
     struct RootSystemDescriptionPointer* rsdp;
-    dav::Array<IOAPIC, 16> m_ioApics;
+    kpp::Array<IOAPIC, 16> m_ioApics;
     std::size_t m_numLocalApics {0};
     std::size_t m_numIoApics {0};
 };

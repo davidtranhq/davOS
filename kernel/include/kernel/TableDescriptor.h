@@ -2,7 +2,7 @@
 #define DAVOS_KERNEL_TABLE_DESCRIPTOR_H_INCLUDED
 
 #include <stdint.h>
-#include <dav/array.hpp>
+#include <kpp/Array.hpp>
 
 /**
  * @brief A data structure used to contain information about
@@ -32,7 +32,7 @@ public:
     const uint8_t *address() const;
 
 private:
-    dav::Array<uint8_t, size> byte_representation_;
+    kpp::Array<uint8_t, size> byte_representation_;
 };
 
 #endif
