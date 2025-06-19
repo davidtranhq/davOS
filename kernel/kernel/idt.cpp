@@ -53,7 +53,7 @@ void isr_nmi_interrupt(IDTStructure::InterruptFrame *frame)
 __attribute__((interrupt))
 void isr_breakpoint(IDTStructure::InterruptFrame *frame_arg)
 {
-    printf("interrupt handling test: PASSED\n");
+    kpp::printf("interrupt handling test: PASSED\n");
 }
 #else
 __attribute__((interrupt))

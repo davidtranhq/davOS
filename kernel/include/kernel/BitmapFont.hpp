@@ -10,6 +10,8 @@ struct BitmapFont {
 	const size_t characterHeight = bytesPerCharacter;
 	size_t characterLeftPadding = 1;
 	size_t characterTopPadding = 1;
+    size_t characterRightPadding = 1;
+    size_t characterBottomPadding = 1;
 	kpp::Array<uint8_t, 256 * bytesPerCharacter> data;
 
 	inline std::size_t characterTotalWidth() const { return characterWidth + characterLeftPadding; }
@@ -27,6 +29,7 @@ constexpr VGAFont terminalFont = {
 	.characterWidth = 8,
 	.characterLeftPadding = 0,
 	.characterTopPadding = 0,
+    .characterRightPadding = 0,
 	.data = {
 		#include "fonts/vga_font.raw"
 	}

@@ -105,7 +105,7 @@ auto test_allocator() -> void {
 
 void test_local_apic()
 {
-    kpp::printf("running local APIC test...\n");
+    kpp::printf("running local APIC test... (if interprocessor interrupt test: PASSED) does not show, then this test failed!\n");
     APICManager().sendInterprocessorInterrupt(0, 0xff);
     kpp::printf("local APIC test: PASSED\n");
 }

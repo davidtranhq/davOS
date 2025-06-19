@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <kpp/cmath.hpp>
 #include <kpp/StringView.hpp>
 #include <kernel/Terminal.hpp>
@@ -7,11 +9,83 @@ Terminal::Terminal(const Framebuffer& framebuffer, const VGAFont& font)
       m_font(font)
 {}
 
+void Terminal::LineBuffer::setLineSize(size_t lineSize)
+{
+    m_lineSize = std::min(lineSize, s_maxColumns);
+}
+
+void Terminal::LineBuffer::setNumVisibleLines(size_t numVisibleLines)
+{
+    m_visibleLines = numVisibleLines;
+}
+
+void Terminal::LineBuffer::scrollDown(int lines)
+{
+    if (lines >= 0)
+        m_firstVisibleLine = std::min(m_size - 1, m_firstVisibleLine + lines);
+    else
+        m_firstVisibleLine = (size_t)kpp::abs(lines) > m_firstVisibleLine ? 0 : m_firstVisibleLine - (size_t)kpp::abs(lines);
+}
+
+Terminal::LineBuffer::WriteResult Terminal::LineBuffer::write(char character, ScrollMode scrollMode) {
+    const bool lineWrap = m_currentColumn >= m_lineSize || character == '\n';
+    const auto oldFirstVisibleLine = m_firstVisibleLine;
+    if (lineWrap) {
+        if (m_size >= s_maxLines) {
+            // Buffer is full, overwrite the oldest line
+            m_front = (m_front + 1) % s_maxLines;
+            if (m_firstVisibleLine == m_front) {
+                // If the first visual line is being overwritten, the terminal will
+                // scroll down to erase it from the terminal.
+                m_firstVisibleLine = (m_firstVisibleLine + 1) % s_maxLines;
+            }
+        } else {
+            m_size++;
+        }
+        if (scrollMode == ScrollMode::automatic) {
+            // If the line wrapped, we need to scroll down until the last line is visible.
+            m_firstVisibleLine = std::max(m_firstVisibleLine, m_size > m_visibleLines ? m_size - m_visibleLines : 0);
+        }
+        m_currentColumn = 0;
+    }
+    // Write the character to the current line
+    kpp::Array<char, s_maxColumns>& currentLine = m_lineBuffer[(m_front + m_size - 1) % s_maxLines];
+    if (character != '\n') {
+        currentLine[m_currentColumn++] = character;
+    }
+    return WriteResult {
+        .lineWrapped = lineWrap,
+        .needsViewportRedraw = m_firstVisibleLine != oldFirstVisibleLine
+    };
+}
+
+size_t Terminal::LineBuffer::firstVisibleLineIndex() const
+{
+    return m_firstVisibleLine < m_front ? m_firstVisibleLine + s_maxLines : m_firstVisibleLine;
+}
+
+size_t Terminal::LineBuffer::lastVisibleLineIndex() const
+{
+    return (firstVisibleLineIndex() + m_visibleLines - 1);
+}
+
+const Terminal::LineBuffer::Line& Terminal::LineBuffer::getLine(size_t index) const
+{
+    return m_lineBuffer[index % s_maxLines];
+}
+
 void Terminal::write(char character)
 {
-    m_characterBuffer.push(character);
-    if (paintCharacter(character) == PaintCharacterResult::cursorWrappedToNewLine && character != '\n')
-        m_characterBuffer.push('\n');
+    LineBuffer::WriteResult result = m_lineBuffer.write(character);
+    if (result.needsViewportRedraw) {
+        clearViewport();
+        paintVisibleBuffer();
+    } else {
+        if (result.lineWrapped && character != '\n')
+            paintCharacter('\n');
+        paintCharacter(character);
+    }
+
 }
 
 void Terminal::write(kpp::StringView<char> string)
@@ -20,22 +94,19 @@ void Terminal::write(kpp::StringView<char> string)
         write(character);
 }
 
-Terminal::PaintCharacterResult Terminal::paintCharacter(char character)
+void Terminal::scrollDown(int lines)
 {
-    auto wrapCursorToNewLine = [&] {
-        m_paintCursor.x = 0;
-        const auto lineHeight = m_font.characterTotalHeight();
-        if (m_paintCursor.y + 2 * lineHeight > m_framebuffer.height()) {
-            if (m_scrollMode == ScrollMode::automatic)
-                scrollUp(-1);
-        } else {
-            m_paintCursor.y += lineHeight;
-        }
-    };
+    m_lineBuffer.scrollDown(lines);
+    clearViewport();
+    paintVisibleBuffer();
+};
 
+void Terminal::paintCharacter(char character)
+{
     if (character == '\n') {
-        wrapCursorToNewLine();
-        return PaintCharacterResult::cursorWrappedToNewLine;
+        m_paintCursor.x = 0;
+        m_paintCursor.y += m_font.characterTotalHeight();
+        return;
     }
 
     auto characterTopLeft = m_paintCursor;
@@ -46,59 +117,15 @@ Terminal::PaintCharacterResult Terminal::paintCharacter(char character)
     for (std::size_t line = 0; line < characterBitmap.size(); ++line) {
         for (std::size_t bit = 0; bit < characterBitWidth; ++bit) {
             if (characterBitmap[line] & (1 << (characterBitWidth - bit - 1))) {
-                constexpr auto whiteRGBA = 0xffffffff;
+       constexpr Framebuffer::RGBAPixel whiteRGBA = 0xffffffff;
                 m_framebuffer.setPixel({characterTopLeft.x + bit, characterTopLeft.y + line}, whiteRGBA);
             } else {
-                constexpr auto blackRGBA = 0;
+                constexpr Framebuffer::RGBAPixel blackRGBA = 0;
                 m_framebuffer.setPixel({characterTopLeft.x + bit, characterTopLeft.y + line}, blackRGBA);
             }
         }
     }
-    m_paintCursor.x += m_font.characterTotalWidth();
-    if (m_paintCursor.x + m_font.characterTotalWidth() >= m_framebuffer.width()) {
-        wrapCursorToNewLine();
-        return PaintCharacterResult::cursorWrappedToNewLine;
-    }
-    return PaintCharacterResult::normal;
-}
-
-void Terminal::scrollUp(int numberOfLines)
-{
-    if (!numberOfLines)
-        return;
-    const bool scrollDown = numberOfLines < 0;
-    numberOfLines = kpp::abs(numberOfLines);
-    for (int linesScrolled = 0; linesScrolled < numberOfLines; ++linesScrolled) {
-		auto firstCharacterOfNextLine = m_firstVisibleCharacter;
-        if (scrollDown) {
-			// Find the next newline character
-            while (firstCharacterOfNextLine < m_characterBuffer.size() && m_characterBuffer[firstCharacterOfNextLine] != '\n') 
-				++firstCharacterOfNextLine;
-			// Skip the newline character
-			++firstCharacterOfNextLine;
-			// Don't scroll down if there are no more lines
-			if (firstCharacterOfNextLine >= m_characterBuffer.size())
-				break;
-        } else {
-            // If we are at the start of the buffer, there are no more lines to scroll up to
-            if (!firstCharacterOfNextLine) {
-                m_firstVisibleCharacter = 0;
-                break;
-            }
-            // Move to the newline character preceding this line
-            firstCharacterOfNextLine -= 1;
-            // Skip over the newline character preceding this line and
-            // find the newline character of the previous previous line
-            while (firstCharacterOfNextLine && m_characterBuffer[--firstCharacterOfNextLine] != '\n')
-                ;
-			// Move one character past the newline character of the previous line, if there is a previous line
-            if (firstCharacterOfNextLine)
-			    ++firstCharacterOfNextLine;
-        }
-		m_firstVisibleCharacter = firstCharacterOfNextLine;
-    }
-    clearViewport();
-	paintVisibleBuffer();
+    m_paintCursor.x += m_font.characterWidth + m_font.characterLeftPadding + m_font.characterRightPadding;
 }
 
 void Terminal::clearViewport()
@@ -113,13 +140,16 @@ void Terminal::clearViewport()
 void Terminal::paintVisibleBuffer()
 {
 	m_paintCursor = {0, 0};
-	size_t linesPainted = 0;
-	const size_t maxVisibleLines = m_framebuffer.height() / m_font.characterTotalHeight();
-	auto characterIndex = m_firstVisibleCharacter;
-	while (characterIndex < m_characterBuffer.size() && linesPainted < maxVisibleLines) {
-		linesPainted += paintCharacter(m_characterBuffer[characterIndex]) == PaintCharacterResult::cursorWrappedToNewLine;
-		characterIndex += 1;
-	}
+    for (size_t line = m_lineBuffer.firstVisibleLineIndex(); line <= m_lineBuffer.lastVisibleLineIndex(); ++line) {
+        const Terminal::LineBuffer::Line& currentLine = m_lineBuffer.getLine(line);
+        for (char character : currentLine) {
+            if (character == '\0') {
+                break; // Skip empty characters
+            }
+            paintCharacter(character);
+        }
+        paintCharacter('\n');
+    }
 }
 
 void KernelTerminal::initialize()

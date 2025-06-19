@@ -15,13 +15,15 @@ public:
 		std::size_t y = 0;
     };
 
+    using RGBAPixel = uint32_t;
+
 	Framebuffer(uint32_t* pixelBitmapBuffer, std::size_t widthInPixels, std::size_t heightInPixels)
 		: m_pixels {pixelBitmapBuffer},
 		m_width {widthInPixels},
 		m_height {heightInPixels}
 	{}
 
-	inline void setPixel(Cursor cursor, uint32_t value)
+	inline void setPixel(Cursor cursor, RGBAPixel value)
 	{
         // TODO: remove this dependency on kernel_assert: this Terminal class is written
         // to be used not just in kernel space but also in user space.
@@ -34,51 +36,93 @@ public:
     inline const uint32_t* data() const noexcept { return m_pixels; }
 
 private:
-	uint32_t* m_pixels;
+	RGBAPixel* m_pixels;
 	std::size_t m_width;
 	std::size_t m_height;
 };
 
 class Terminal
 {
-	template<typename T, std::size_t bufferCapacity>
-	class RingBuffer {
-	public:
-		void push(char character)
-		{
-			if (m_size == bufferCapacity) {
-				m_front = (m_front + 1) % bufferCapacity;
-				--m_size;
-			}
-			m_data[(m_front + m_size) % bufferCapacity] = character;
-			++m_size;
-		}
-
-		char operator[](std::size_t index) const
-		{
-            // TODO: remove this dependency on kernel_assert: this Terminal class is written
-            // to be used not just in kernel space but also in user space.
-			kernel_assert(index < m_size, "Index out of bounds");
-			return m_data[(m_front + index) % bufferCapacity];
-		}
-
-		std::size_t size() const { return m_size; }
-
-	private:
-		kpp::Array<T, bufferCapacity> m_data;
-		std::size_t m_front = 0;
-		std::size_t m_size = 0;
-	};
-
 public:
-    /**
-     * Dictates the behaviour of the viewport when text is written to the buffer.
-     * Automatic: Scroll the terminal such that the last line is always visible.
-     * Manual: Do not scroll the terminal automatically.
-     */
     enum class ScrollMode {
-        automatic,
-        manual
+        automatic, // Automatically scrolls the viewport when the buffer overflows
+        manual     // Does not scroll the viewport, just adds new lines to the buffer
+    };
+
+private:
+    /**
+     * A circular buffer that stores lines of text. Each line is a fixed-size array of characters.
+     * The buffer wraps around when it reaches the end, overwriting the oldest lines.
+     */
+    class LineBuffer {
+    public:
+        static constexpr size_t s_maxColumns = 100;
+        static constexpr size_t s_maxLines = 256;
+        using Line = kpp::Array<char, s_maxColumns>;
+        /**
+         * Set the maximum number of characters per line (terminal width).
+         */
+        void setLineSize(size_t lineSize);
+
+        /**
+         * Set the number of lines visible in the viewport (terminal height).
+         */
+        void setNumVisibleLines(size_t numVisibleLines);
+
+        /**
+         * Scroll the viewport down the specified number of lines (so that previous lines are
+         * hidden and subsequent lines are visible). A negative paramter corresponds to a downward
+         * scroll.
+         */
+        void scrollDown(int lines);
+
+        /**
+         * Write a character to the buffer. If the line is full, it will wrap to the next line.
+         * If the buffer is full, it will overwrite the oldest line.
+         */
+        struct WriteResult {
+            bool lineWrapped = false;
+            bool needsViewportRedraw = false;
+        };
+        WriteResult write(char character, ScrollMode scrollMode = ScrollMode::automatic);
+
+        /**
+         * Returns the position of the first line expected to be visible in the viewport.
+         * Note that this is the position in the circular buffer, not the raw index
+         * into the underlying array.
+         */
+        size_t firstVisibleLineIndex() const;
+
+        /**
+         * Returns the position of the last line expected to be visible in the viewport.
+         * Note that this is the position in the circular buffer, not the raw index
+         * into the underlying array.
+         */
+        size_t lastVisibleLineIndex() const;
+
+        const Line& getLine(size_t index) const;
+
+    private:
+        size_t m_lineSize = s_maxColumns;
+        size_t m_visibleLines = 24;
+        
+        kpp::Array<Line, s_maxLines> m_lineBuffer;
+        size_t m_front = 0;
+        size_t m_size = 1;
+        
+        // The index of the first line that is currently visible in the viewport.
+        // Note that this changes not only when the terminal scrolls, but
+        // also it may change when our circular buffer runs out of room and 
+        // needs to overwrite the first line.
+        //
+        // Note that this is the raw index into the circular buffer, not the
+        // position of the line in the queue, similar to m_front and m_size
+        // but different from what is returned from firstVisibleLine() and lastVisibleLine().
+        size_t m_firstVisibleLine = 0;
+
+        // The first empty column in the last line of the buffer:
+        // the location where the next character will be writte nto.
+        size_t m_currentColumn = 0;
     };
 
 public:
@@ -97,11 +141,11 @@ public:
     void write(kpp::StringView<char>);
 
     /**
-     * Scroll the viewport up the specified number of lines (so that previous lines become
-     * visible and subsequent lines are not). A negative paramter corresponds to a downward
+     * Scroll the viewport down the specified number of lines (so that previous lines are
+     * hidden and subsequent lines are visible). A negative paramter corresponds to a downward
      * scroll.
      */
-    void scrollUp(int numberOfLines);
+    void scrollDown(int numberOfLines);
 
     /**
      * Clear the viewport, but do not clear the text buffer.
@@ -118,11 +162,7 @@ private:
      * Paint a character at the curent paint cursor position, automatically advancing the cursor,
      * moving down a line if necessary.
      */
-    enum class PaintCharacterResult {
-        normal,
-        cursorWrappedToNewLine
-    };
-    PaintCharacterResult paintCharacter(char);
+    void paintCharacter(char);
 
 	/**
 	 * Paint the portion of the text buffer visible in the viewport, that is, the text buffer
@@ -132,19 +172,31 @@ private:
 	void paintVisibleBuffer();
 
 private:
+    size_t m_columnsPerLine = 100;
+    size_t m_maxVisibleLines = 24;
 
     Framebuffer m_framebuffer;
 	const BitmapFont<16>& m_font {DefaultFonts::terminalFont};
 	ScrollMode m_scrollMode = ScrollMode::automatic;
 	Framebuffer::Cursor m_paintCursor;
+    LineBuffer m_lineBuffer;
 
     /**
-     * The index of the first character in the text buffer that is visible in the viewport.
-     * This will always be the index of a character at the start of a line, that is,
-     * the index of a character after a newline character.
+     * write character to terminal
+     *      character does not create new line: just print it
+     *      character does create new line:
+     *          if the buffer is full, pop the oldest line, and if the "first line"
+     *          points to this oldest line, update "first line" to the next line
+     *          if automatic scrolling:
+     *              scroll terminal so that there is an empty
+     *              line at the botom
+     *                  update "first line" to last line - terminalLines (clamp to 0)
+     *                  if changed, repaint the whole terminal based on the buffer
+     *          if manual scrolling:
+     *              do not scroll, just add the character to the buffer
+     *
+     *          
      */
-	std::size_t m_firstVisibleCharacter = 0;
-	RingBuffer<char, 0x10000> m_characterBuffer;
 };
 
 namespace KernelTerminal {

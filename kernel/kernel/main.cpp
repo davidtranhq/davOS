@@ -5,7 +5,7 @@
 #include <kernel/kernel.h>
 #include <kernel/limine.h>
 #include <kernel/macros.h>
-#include <kernel/terminal.h>
+#include <kernel/Terminal.hpp>
 #include <kernel/tests.h>
 #include <kernel/types.h> // LinkerAddress
 
@@ -22,8 +22,11 @@ void kernel_main()
     DEBUG("Stack initialized to %x\n", &kernel_stack_start);
 
     run_all_tests();
-    
+
     kpp::printf("Hello, world!\n");
+
+    // uncomment to test terminal scroll
+    // KernelTerminal::instance->scrollDown(-5);
 
     kernel_hang();
 }
