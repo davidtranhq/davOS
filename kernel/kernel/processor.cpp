@@ -178,3 +178,40 @@ void processor::disablePIC()
     outb(pic2DataPort, 0xff);
 }
 
+/**
+ * @brief Initialize the PS/2 keyboard controller to enable IRQ1 generation.
+ * QEMU should do this automatically, but in some stricter QEMU environments
+ * or on actual hardware, this manual configuration might be necessary.
+ */
+void processor::initKeyboardController()
+{
+    // Wait until the input buffer is clear
+    while (inb(0x64) & 0x02);
+
+    // Enable keyboard device (send command 0xAE to controller)
+    outb(0x64, 0xAE);
+    ioWait();
+
+    // Request current command byte
+    while (inb(0x64) & 0x02);  // Wait for input buffer to clear
+    outb(0x64, 0x20);          // Read command byte
+    ioWait();
+
+    // Wait for output buffer to be ready
+    while (!(inb(0x64) & 0x01));
+    uint8_t commandByte = inb(0x60);
+
+    // Enable IRQ1 (bit 0), and keyboard clock (clear bit 4)
+    commandByte |= 0x01;   // Enable IRQ1
+    commandByte &= ~0x10;  // Enable keyboard clock
+
+    // Write command byte back
+    while (inb(0x64) & 0x02);
+    outb(0x64, 0x60);  // Write command byte command
+    ioWait();
+
+    while (inb(0x64) & 0x02);
+    outb(0x60, commandByte);
+    ioWait();
+}
+

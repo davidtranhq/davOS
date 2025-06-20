@@ -169,6 +169,11 @@ void remapPIC(int offset1, int offset2);
  */
 void disablePIC();
 
+/**
+ * @brief Initialize the PS/2 keyboard controller to enable IRQ1 generation.
+ */
+void initKeyboardController();
+
 } // namespace Processor
 
 

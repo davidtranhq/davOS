@@ -6,7 +6,6 @@
  * and forwarding other hardware interrupts (e.g., from an I/O APIC) to the processor.
  */
 class LocalAPIC {
-    struct Registers;
 public:
     /**
      * @brief Enable and configure the local APIC, setting and mapping the physical base address,
@@ -17,6 +16,15 @@ public:
      */
     void enableAPIC();
 
-private:
-    Registers* m_baseAddress = nullptr;
+    /**
+     * @brief Send the End of Interrupt (EOI) signal to the local APIC. This needs to be called
+     * after handling an interrupt to inform the local APIC that the interrupt has been processed
+     * to allow it to handle further interrupts.
+     */
+    void sendEndOfInterrupt();
+
+    void write(uint32_t regOffset, uint32_t value);
+    uint32_t read(uint32_t regOffset);
+
+    volatile uint32_t *baseAddress = nullptr;
 };

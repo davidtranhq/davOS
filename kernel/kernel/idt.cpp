@@ -31,18 +31,21 @@ __attribute__((interrupt))
 void isr_divide_error(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("divide error\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_debug_exception(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("debug exception\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_nmi_interrupt(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("nonmaskable external interrupt\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 #ifdef INTERRUPT_TEST
@@ -54,12 +57,14 @@ __attribute__((interrupt))
 void isr_breakpoint(IDTStructure::InterruptFrame *frame_arg)
 {
     kpp::printf("interrupt handling test: PASSED\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 #else
 __attribute__((interrupt))
 void isr_breakpoint(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("breakpoint\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 #endif
 
@@ -67,60 +72,70 @@ __attribute__((interrupt))
 void isr_overflow(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("overflow\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_bound_range_exceeded(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("bound range exceeded\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_invalid_opcode(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("invalid opcode\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_device_not_available(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("device not available\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_double_fault(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 {
     kernel_panic("double fault\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_coprocessor_segment_overrun(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 {
     kernel_panic("coprocessor segment overrun\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_invalid_tss(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 {
     kernel_panic("invalid tss\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_segment_not_present(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 {
     kernel_panic("segment not present\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_stack_segment_fault(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 {
     kernel_panic("stack segment fault\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_general_protection(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 {
     kernel_panic("general protection\nerror_code: %x", error_code);
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
@@ -162,36 +177,42 @@ void isr_page_fault(IDTStructure::InterruptFrame *frame, uint64_t error_code)
     auto faulting_address = uintptr_t {};
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
     paging_allocate_and_map(faulting_address, kernelConstants::pageSize, PageFlags::Write);
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_math_fault(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("math fault\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_alignment_check(IDTStructure::InterruptFrame *frame, uint64_t error_code)
 {
     kernel_panic("alignment check\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_machine_check(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("machine check\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_simd_floating_point_exception(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("SIMD floating-point exception\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 __attribute__((interrupt))
 void isr_virtualization_exception(IDTStructure::InterruptFrame *frame)
 {
     kernel_panic("virtualization exception\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 #ifdef INTERPROCESSOR_INTERRUPT_TEST
@@ -199,6 +220,7 @@ __attribute__((interrupt))
 void isr_interprocessor_interrupt(IDTStructure::InterruptFrame *frame)
 {
     kpp::printf("interprocessor interrupt test: PASSED\n");
+    processor::localAPIC.sendEndOfInterrupt();
 }
 #endif
 
@@ -208,6 +230,7 @@ void isr_keyboard(IDTStructure::InterruptFrame *frame)
     // Read the scan code from the keyboard controller
     auto scan_code = processor::inb(0x60);
     kpp::printf("keyboard interrupt: scan code: %x\n", scan_code);
+    processor::localAPIC.sendEndOfInterrupt();
 }
 
 IDTStructure idt;

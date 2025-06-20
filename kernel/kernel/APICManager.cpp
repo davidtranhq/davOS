@@ -92,13 +92,16 @@ void APICManager::redirectIrq(uint8_t irq, uint8_t vector)
     for (const auto& ioApic : m_ioApics) {
         if (!ioApic.handlesIRQ(irq))
             continue;
+        // Read low before high, as recommended by Intel
         auto low = ioApic.readRedirectionEntryLow(irq);
         auto high = ioApic.readRedirectionEntryHigh(irq);
-        low &= 0;
-        low |= vector;
-        high &= 0;
-        ioApic.writeRedirectionEntryLow(irq, low);
+        low &= ~0xff; // Clear vector bits
+        low |= vector; // Set new vector
+        low &= ~(1 << 16); // Enable interrupt
+        high = (high & 0x00ffffff) | (ioApic.id() << 24); // Set APIC ID in high register
+        // Write high before low, as recommended by Intel
         ioApic.writeRedirectionEntryHigh(irq, high);
+        ioApic.writeRedirectionEntryLow(irq, low);
         DEBUG("Redirected IRQ %d to vector %d. New low: %x, new high: %x\n", irq, vector, ioApic.readRedirectionEntryLow(irq), ioApic.readRedirectionEntryHigh(irq));
         return;
     }

@@ -37,6 +37,7 @@ void kernel_init()
     paging_init();
     vmm_init();
     processor::localAPIC.enableAPIC();
+    processor::initKeyboardController();
     APICManager apicManager;
     apicManager.initialize();
     apicManager.redirectIrq(1, 0x30);

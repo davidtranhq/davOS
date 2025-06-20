@@ -44,6 +44,7 @@ class APICManager {
 
         void writeRegister(uint8_t reg, uint32_t value) const;
         uint32_t readRegister(uint8_t reg) const;
+        inline uint8_t id() const { return m_id; }
         inline bool handlesIRQ(uint8_t irq) const { return irq >= m_globalSystemInterruptBase && irq < m_globalSystemInterruptBase + m_numRedirectionEntries; }
         inline uint32_t readRedirectionEntryLow(uint8_t irq) const
         { 

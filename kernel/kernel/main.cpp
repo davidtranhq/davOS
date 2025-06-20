@@ -5,10 +5,8 @@
 #include <kernel/kernel.h>
 #include <kernel/limine.h>
 #include <kernel/macros.h>
-#include <kernel/Terminal.hpp>
 #include <kernel/tests.h>
 #include <kernel/types.h> // LinkerAddress
-
 
 extern LinkerAddress kernel_stack_start;
 
@@ -24,9 +22,6 @@ void kernel_main()
     run_all_tests();
 
     kpp::printf("Hello, world!\n");
-
-    // uncomment to test terminal scroll
-    // KernelTerminal::instance->scrollDown(-5);
 
     kernel_hang();
 }

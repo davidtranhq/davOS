@@ -8,6 +8,7 @@
 #include <kernel/frame_allocator.h>
 #include <kernel/FreeListAllocator.h>
 #include <kernel/macros.h>
+#include <kernel/processor.hpp>
 #include <kernel/tests.h>
 #include <kernel/paging.h>
 
@@ -110,6 +111,46 @@ void test_local_apic()
     kpp::printf("local APIC test: PASSED\n");
 }
 
+void test_keyboard()
+{
+    kpp::printf("running keyboard controller test...\n");
+
+    // --- PS/2 Controller Command Byte Check ---
+    processor::outb(0x64, 0x20);
+    processor::ioWait();
+    uint8_t cmd = processor::inb(0x60);
+
+    bool irq1_enabled = cmd & (1 << 0);         // Bit 0
+    bool irq12_enabled = cmd & (1 << 1);        // Bit 1
+    bool kbd_clock_enabled = !(cmd & (1 << 4)); // Bit 4 (0 = enabled)
+    bool translation_enabled = cmd & (1 << 6);  // Bit 6
+
+    kpp::printf("Command Byte: 0x%x\n", cmd);
+    kpp::printf("  IRQ1 (keyboard):       %s (%s)\n", irq1_enabled ? "enabled" : "disabled", irq1_enabled ? "OK" : "EXPECTED ENABLED");
+    kpp::printf("  IRQ12 (mouse):         %s\n", irq12_enabled ? "enabled" : "disabled");
+    kpp::printf("  Keyboard clock:        %s (%s)\n", kbd_clock_enabled ? "enabled" : "disabled", kbd_clock_enabled ? "OK" : "EXPECTED ENABLED");
+    kpp::printf("  Scancode translation:  %s\n", translation_enabled ? "enabled" : "disabled");
+
+    if (irq1_enabled && kbd_clock_enabled)
+        kpp::printf("keyboard controller test: PASSED\n");
+    else
+        kpp::printf("keyboard controller test: FAILED\n");
+
+    // --- Local APIC State Check ---
+    uint32_t tpr = processor::localAPIC.read(0x80);
+    kpp::printf("TPR: 0x%x (%s)\n", tpr, tpr == 0 ? "OK" : "EXPECTED 0");
+
+    int flags;
+    asm volatile("pushf; pop %%rax; and $0x200, %%rax" : "=a"(flags));
+    kpp::printf("IF enabled: %s (%s)\n", flags ? "yes" : "no", flags ? "OK" : "EXPECTED yes");
+
+    uint32_t svr = processor::localAPIC.read(0xF0);
+    bool apic_enabled = svr & (1 << 8);
+    kpp::printf("SVR: 0x%x\n", svr);
+    kpp::printf("  APIC enabled bit: %s (%s)\n", apic_enabled ? "yes" : "no", apic_enabled ? "OK" : "EXPECTED yes");
+
+}
+
 // TODO: Make this into a real suite that errors out on failure
 void run_all_tests()
 {
@@ -123,6 +164,7 @@ void run_all_tests()
     test_paging();
     test_allocator<FreeListAllocator<char>>();
     test_local_apic();
+    test_keyboard();
     kpp::printf("\nPASSED ALL TESTS\n");
     kpp::printf("=========================\n\n");
 }
