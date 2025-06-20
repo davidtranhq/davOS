@@ -2,9 +2,6 @@ BIN := test_kernel
 CXX := clang++
 GTEST_PATH := ../../external/gtest
 SRCS := \
-	test_Terminal.cpp \
-	../kernel/Terminal.cpp \
-	../kernel/limine_features.cpp \
 
 OBJS := $(SRCS:.cpp=.o)
 
@@ -17,7 +14,7 @@ CXXFLAGS := \
 INCLUDE_DIRS := \
 	$(GTEST_PATH)/googletest/include \
 	../include \
-	../lib/kernelcpp/include
+	../lib/kpp/include
 
 CPPFLAGS += $(addprefix -I, $(INCLUDE_DIRS))
 
