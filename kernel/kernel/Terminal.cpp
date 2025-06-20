@@ -151,6 +151,16 @@ void Terminal::paintVisibleBuffer()
     }
 }
 
+void Terminal::clearViewport()
+{
+    for (std::size_t y = 0; y < m_framebuffer.height(); ++y) {
+        for (std::size_t x = 0; x < m_framebuffer.width(); ++x) {
+            m_framebuffer.setPixel({x, y}, 0);
+        }
+    }
+    m_paintCursor = {0, 0};
+}
+
 void KernelTerminal::initialize()
 {
     instance.emplace(Terminal {

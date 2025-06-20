@@ -152,6 +152,11 @@ public:
      */
     void setScrollMode(ScrollMode scrollMode) { m_scrollMode = scrollMode; }
 
+    /**
+     * Clear the viewport, but do not clear the text buffer.
+     */
+    void clearViewport();
+
 private:
     /**
      * Paint a character at the curent paint cursor position, automatically advancing the cursor,

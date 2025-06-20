@@ -3,6 +3,7 @@ SUBMODULES :=
 BIN_$(DIR) := kpp
 
 OBJS_$(DIR) := $(addprefix $(DIR)/, \
+	stdio/getchar.o \
 	stdio/printf.o \
 	stdio/putchar.o \
 	stdio/puts.o \

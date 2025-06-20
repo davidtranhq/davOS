@@ -6,6 +6,7 @@
 #include <kernel/idt.h>
 #include <kernel/IDTStructure.h>
 #include <kernel/kernel.h>
+#include <kernel/KeyboardBuffer.hpp>
 #include <kernel/paging.h>
 #include <kernel/processor.hpp>
 #include <kernel/SegmentSelector.h>
@@ -229,15 +230,56 @@ __attribute__((interrupt))
 void isr_keyboard(IDTStructure::InterruptFrame *frame)
 {
     auto scan_code = processor::inb(0x60);
-    // TODO: these inputs should be sent to a kernel input buffer
-    // and then processed by the terminal.
-    // I just want to be able to scroll the terminal for now.
-    if (scan_code == 0x48) {
-        KernelTerminal::instance->scrollDown(-1);
-    }
-    else if (scan_code == 0x50) {
-        KernelTerminal::instance->scrollDown(1);
-    }
+
+    using Key = KeyboardBuffer::Key;
+    auto scancode_to_key = [](uint8_t scancode) -> Key {
+        // Handle extended key prefix
+        static bool extended = false;
+        if (extended) {
+            extended = false;
+            switch (scancode) {
+                case 0x48: return Key::UpArrow;
+                case 0x50: return Key::DownArrow;
+                case 0x4B: return Key::LeftArrow;
+                case 0x4D: return Key::RightArrow;
+                default:   return Key::None;
+            }
+        }
+
+        if (scancode == 0xE0) {
+            extended = true;
+            return Key::None;
+        }
+
+        if (scancode & 0x80) {
+            // Ignore key release
+            return Key::None;
+        }
+
+        // Use a simple scancode-to-ASCII table
+        static const char scancode_to_ascii[128] = {
+            0, 27, '1', '2', '3', '4', '5', '6',  // 0x00 - 0x07
+            '7', '8', '9', '0', '-', '=', '\b', '\t',
+            'q', 'w', 'e', 'r', 't', 'y', 'u', 'i',
+            'o', 'p', '[', ']', '\n', 0,  'a', 's',
+            'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',
+            '\'', '`', 0,  '\\', 'z', 'x', 'c', 'v',
+            'b', 'n', 'm', ',', '.', '/', 0,   '*',
+            0,  ' ', 0, 0, 0, 0, 0, 0,
+            // (Fill in more if needed)
+        };
+
+        if (scancode < 128) {
+            char ascii = scancode_to_ascii[scancode];
+            if (ascii != 0) {
+                return static_cast<Key>(ascii); // <-- The magic line
+            }
+        }
+
+        return Key::None;
+    };
+    kernel::keyboardBuffer.put(scancode_to_key(scan_code));
+
     processor::localAPIC.sendEndOfInterrupt();
 }
 
