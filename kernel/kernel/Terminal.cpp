@@ -7,7 +7,10 @@
 Terminal::Terminal(const Framebuffer& framebuffer, const VGAFont& font)
     : m_framebuffer(framebuffer),
       m_font(font)
-{}
+{
+    m_lineBuffer.setLineSize(m_framebuffer.width() / m_font.characterTotalWidth());
+    m_lineBuffer.setNumVisibleLines(m_framebuffer.height() / m_font.characterTotalHeight());
+}
 
 void Terminal::LineBuffer::setLineSize(size_t lineSize)
 {
@@ -16,7 +19,7 @@ void Terminal::LineBuffer::setLineSize(size_t lineSize)
 
 void Terminal::LineBuffer::setNumVisibleLines(size_t numVisibleLines)
 {
-    m_visibleLines = numVisibleLines;
+    m_visibleLines = std::min(numVisibleLines, s_maxLines);
 }
 
 void Terminal::LineBuffer::scrollDown(int lines)
@@ -71,14 +74,13 @@ size_t Terminal::LineBuffer::lastVisibleLineIndex() const
 
 const Terminal::LineBuffer::Line& Terminal::LineBuffer::getLine(size_t index) const
 {
-    return m_lineBuffer[index % s_maxLines];
+    return m_lineBuffer[(m_front + index) % s_maxLines];
 }
 
 void Terminal::write(char character)
 {
     LineBuffer::WriteResult result = m_lineBuffer.write(character);
     if (result.needsViewportRedraw) {
-        clearViewport();
         paintVisibleBuffer();
     } else {
         if (result.lineWrapped && character != '\n')
@@ -97,15 +99,21 @@ void Terminal::write(kpp::StringView<char> string)
 void Terminal::scrollDown(int lines)
 {
     m_lineBuffer.scrollDown(lines);
-    clearViewport();
     paintVisibleBuffer();
 };
 
 void Terminal::paintCharacter(char character)
 {
     if (character == '\n') {
+        for (std::size_t x = m_paintCursor.x; x < m_framebuffer.width(); ++x) {
+            constexpr Framebuffer::RGBAPixel blackRGBA = 0;
+            for (std::size_t y = m_paintCursor.y; y < m_paintCursor.y + m_font.characterTotalHeight(); ++y) {
+                m_framebuffer.setPixel({x, y}, blackRGBA);
+            }
+        }
         m_paintCursor.x = 0;
-        m_paintCursor.y += m_font.characterTotalHeight();
+        if (m_paintCursor.y + m_font.characterTotalHeight() < m_framebuffer.height())
+            m_paintCursor.y += m_font.characterTotalHeight();
         return;
     }
 
@@ -126,15 +134,6 @@ void Terminal::paintCharacter(char character)
         }
     }
     m_paintCursor.x += m_font.characterWidth + m_font.characterLeftPadding + m_font.characterRightPadding;
-}
-
-void Terminal::clearViewport()
-{
-    for (std::size_t y = 0; y < m_framebuffer.height(); ++y) {
-        for (std::size_t x = 0; x < m_framebuffer.width(); ++x) {
-            m_framebuffer.setPixel({x, y}, 0);
-        }
-    }
 }
 
 void Terminal::paintVisibleBuffer()

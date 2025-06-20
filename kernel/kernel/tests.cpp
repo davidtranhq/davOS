@@ -104,11 +104,10 @@ auto test_allocator() -> void {
     kpp::printf("allocator test: PASSED\n");
 }
 
-void test_local_apic()
+void test_interprocessor_interrupts()
 {
-    kpp::printf("running local APIC test... (if interprocessor interrupt test: PASSED) does not show, then this test failed!\n");
+    kpp::printf("running interprocessor interrupt test...\n");
     APICManager().sendInterprocessorInterrupt(0, 0xff);
-    kpp::printf("local APIC test: PASSED\n");
 }
 
 void test_keyboard()
@@ -163,7 +162,7 @@ void run_all_tests()
     // test_stack_smash();
     test_paging();
     test_allocator<FreeListAllocator<char>>();
-    test_local_apic();
+    test_interprocessor_interrupts();
     test_keyboard();
     kpp::printf("\nPASSED ALL TESTS\n");
     kpp::printf("=========================\n\n");

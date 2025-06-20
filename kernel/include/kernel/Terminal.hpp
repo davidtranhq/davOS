@@ -56,7 +56,7 @@ private:
      */
     class LineBuffer {
     public:
-        static constexpr size_t s_maxColumns = 100;
+        static constexpr size_t s_maxColumns = 200;
         static constexpr size_t s_maxLines = 256;
         using Line = kpp::Array<char, s_maxColumns>;
         /**
@@ -148,11 +148,6 @@ public:
     void scrollDown(int numberOfLines);
 
     /**
-     * Clear the viewport, but do not clear the text buffer.
-     */
-    void clearViewport();
-
-    /**
      * Set the scroll mode of the terminal.
      */
     void setScrollMode(ScrollMode scrollMode) { m_scrollMode = scrollMode; }
@@ -173,7 +168,6 @@ private:
 
 private:
     size_t m_columnsPerLine = 100;
-    size_t m_maxVisibleLines = 24;
 
     Framebuffer m_framebuffer;
 	const BitmapFont<16>& m_font {DefaultFonts::terminalFont};
