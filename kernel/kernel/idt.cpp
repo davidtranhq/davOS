@@ -10,6 +10,7 @@
 #include <kernel/processor.hpp>
 #include <kernel/SegmentSelector.h>
 #include <kernel/TableDescriptor.h>
+#include <kernel/Terminal.hpp>
 #include <kpp/Array.hpp>
 
 #include <kpp/cstdio.hpp>
@@ -227,9 +228,16 @@ void isr_interprocessor_interrupt(IDTStructure::InterruptFrame *frame)
 __attribute__((interrupt))
 void isr_keyboard(IDTStructure::InterruptFrame *frame)
 {
-    // Read the scan code from the keyboard controller
     auto scan_code = processor::inb(0x60);
-    kpp::printf("keyboard interrupt: scan code: %x\n", scan_code);
+    // TODO: these inputs should be sent to a kernel input buffer
+    // and then processed by the terminal.
+    // I just want to be able to scroll the terminal for now.
+    if (scan_code == 0x48) {
+        KernelTerminal::instance->scrollDown(-1);
+    }
+    else if (scan_code == 0x50) {
+        KernelTerminal::instance->scrollDown(1);
+    }
     processor::localAPIC.sendEndOfInterrupt();
 }
 
