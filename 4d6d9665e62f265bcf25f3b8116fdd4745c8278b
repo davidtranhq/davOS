@@ -1,5 +1,3 @@
-Starting from this commit, we renamed Terminal.cpp to terminal.cpp with
-the intention of deprecating terminal.cpp in favour of a new
-implementation of Terminal.cpp .... but we never got around to doing
-that so this commit (and subsequent ones) fail building until after any
-commits on June 19, 2025
+Starting from this commit, until June 19, 2025, terminal.cpp should be
+renamed to Terminal.cpp. It is fixed after the merge of
+implement-keyboard-handling.
