@@ -40,7 +40,7 @@ void kernel_main()
             kpp::printf("Exiting shell...\n");
             kernel_hang();
         } else if (kpp::strncmp(input, "clear", 5) == 0) {
-            KernelTerminal::instance->clearViewport();
+            KernelTerminal::instance->clear();
         } else {
             kpp::printf("Unknown command: %s\n", input);
         }

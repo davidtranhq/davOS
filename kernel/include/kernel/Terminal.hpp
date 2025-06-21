@@ -102,6 +102,11 @@ private:
 
         const Line& getLine(size_t index) const;
 
+        /**
+         * Clear the buffer.
+         */
+        void clear();
+
     private:
         size_t m_lineSize = s_maxColumns;
         size_t m_visibleLines = 24;
@@ -156,6 +161,12 @@ public:
      * Clear the viewport, but do not clear the text buffer.
      */
     void clearViewport();
+
+
+    /**
+     * Clear the text buffer and the viewport.
+     */
+    void clear();
 
 private:
     /**

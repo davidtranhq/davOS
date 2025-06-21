@@ -64,17 +64,26 @@ Terminal::LineBuffer::WriteResult Terminal::LineBuffer::write(char character, Sc
 
 size_t Terminal::LineBuffer::firstVisibleLineIndex() const
 {
-    return m_firstVisibleLine < m_front ? m_firstVisibleLine + s_maxLines : m_firstVisibleLine;
+    return m_firstVisibleLine < m_front ? m_firstVisibleLine + (s_maxLines - m_front - 1) : m_firstVisibleLine - m_front;
 }
 
 size_t Terminal::LineBuffer::lastVisibleLineIndex() const
 {
-    return (firstVisibleLineIndex() + m_visibleLines - 1);
+    return std::min(m_size - 1, firstVisibleLineIndex() + m_visibleLines - 1);
 }
 
 const Terminal::LineBuffer::Line& Terminal::LineBuffer::getLine(size_t index) const
 {
     return m_lineBuffer[(m_front + index) % s_maxLines];
+}
+
+void Terminal::LineBuffer::clear()
+{
+    m_front = 0;
+    m_size = 1;
+    m_firstVisibleLine = 0;
+    m_currentColumn = 0;
+    m_lineBuffer[m_front] = {};
 }
 
 void Terminal::write(char character)
@@ -147,7 +156,21 @@ void Terminal::paintVisibleBuffer()
             }
             paintCharacter(character);
         }
-        paintCharacter('\n');
+        if (line == m_lineBuffer.lastVisibleLineIndex()) {
+            for (std::size_t x = m_paintCursor.x; x < m_framebuffer.width(); ++x) {
+                constexpr Framebuffer::RGBAPixel blackRGBA = 0;
+                for (std::size_t y = m_paintCursor.y; y < m_paintCursor.y + m_font.characterTotalHeight(); ++y) {
+                    m_framebuffer.setPixel({x, y}, blackRGBA);
+                }
+            }
+        } else {
+            paintCharacter('\n');
+        }
+    }
+    for (std::size_t y = m_paintCursor.y + m_font.characterTotalHeight(); y < m_framebuffer.height(); ++y) {
+        for (std::size_t x = 0; x < m_framebuffer.width(); ++x) {
+            m_framebuffer.setPixel({x, y}, 0);
+        }
     }
 }
 
@@ -159,6 +182,12 @@ void Terminal::clearViewport()
         }
     }
     m_paintCursor = {0, 0};
+}
+
+void Terminal::clear()
+{
+    clearViewport();
+    m_lineBuffer.clear();
 }
 
 void KernelTerminal::initialize()
