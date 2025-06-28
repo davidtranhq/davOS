@@ -8,8 +8,8 @@ BIN = $(NAME).elf
 ISO = $(NAME).iso
 # compiler target
 TARGET = x86_64-elf
-# directory containing architecture specific source files (kernel/<ARCH_DIR>)
-ARCH_DIR = x86-64
+# The architecture for which to compile this kernel for
+ARCH = x86-64
 # modules (sub-projects) contained in this project
 MODULES = kernel
 
@@ -39,7 +39,7 @@ CXXFLAGS += \
 	-fno-use-cxa-atexit \
 	-fno-exceptions \
 	-m64 \
-	-march=x86-64 \
+	-march=$(ARCH) \
 	-mabi=sysv \
 	-mno-80387 \
 	-mno-mmx \
@@ -57,7 +57,7 @@ LDFLAGS += \
 	-static \
 	-melf_x86_64 \
 	-z max-page-size=0x1000 \
-	-T kernel/arch/$(ARCH_DIR)/linker.ld \
+	-T kernel/arch/$(ARCH)/linker.ld \
 
 HEADER_DEPS = $(OBJS:.o=.d)
 
