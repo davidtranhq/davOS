@@ -3,26 +3,26 @@ SUBMODULES := lib/kpp
 
 INCLUDE_DIRS += $(DIR)/include
 OBJS += $(addprefix $(DIR)/, \
-	kernel/APICManager.o \
-	kernel/Frame.o \
-	kernel/frame_allocator.o \
-	kernel/gdt.o \
-	kernel/idt.o \
-	kernel/IDTStructure.o \
-	kernel/kernel.o \
-	kernel/limine_features.o \
-	kernel/load_ptbr.o \
-	kernel/LocalAPIC.o \
-	kernel/main.o \
-	kernel/paging.o \
-	kernel/PageTree.o \
-	kernel/PageTreeNode.o \
-	kernel/processor.o \
-	kernel/reload_segment_registers.o \
-	kernel/TableDescriptor.o \
-	kernel/Terminal.o \
-	kernel/tests.o \
-	kernel/vmm.o \
+	src/APICManager.o \
+	src/Frame.o \
+	src/frame_allocator.o \
+	src/gdt.o \
+	src/idt.o \
+	src/IDTStructure.o \
+	src/kernel.o \
+	src/limine_features.o \
+	src/load_ptbr.o \
+	src/LocalAPIC.o \
+	src/main.o \
+	src/paging.o \
+	src/PageTree.o \
+	src/PageTreeNode.o \
+	src/processor.o \
+	src/reload_segment_registers.o \
+	src/TableDescriptor.o \
+	src/Terminal.o \
+	src/tests.o \
+	src/vmm.o \
 )
 
 include $(patsubst %, $(DIR)/%/module.mk, $(SUBMODULES))
