@@ -1,7 +1,11 @@
 DIR := kernel
 SUBMODULES := lib/kpp
 
-INCLUDE_DIRS += $(DIR)/include
+INCLUDE_DIRS += $(addprefix $(DIR)/, \
+	include \
+	include/arch/$(ARCH) \
+)
+
 OBJS += $(addprefix $(DIR)/, \
 	src/APICManager.o \
 	src/Frame.o \
@@ -22,7 +26,9 @@ OBJS += $(addprefix $(DIR)/, \
 	src/TableDescriptor.o \
 	src/Terminal.o \
 	src/tests.o \
+	src/thread.o \
 	src/vmm.o \
+	src/arch/$(ARCH)/cpu_context.o \
 )
 
 include $(patsubst %, $(DIR)/%/module.mk, $(SUBMODULES))

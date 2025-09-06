@@ -83,7 +83,7 @@ auto paging_allocate_and_map(uintptr_t virtual_base, size_t length, PageFlags fl
  * @brief Get the virtual memory regions that are free to be managed (e.g. by an allocator)
  * after the initial reserved page mappings have been set up.
  * 
- * @return frg::array<MemoryRegion> 
+ * @return kpp::array<MemoryRegion> 
  */
 auto paging_get_initial_free_regions() -> kpp::Array<MemoryRegion, paging_num_free_memory_regions>;
 

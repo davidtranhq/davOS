@@ -9,7 +9,7 @@ ISO = $(NAME).iso
 # compiler target
 TARGET = x86_64-elf
 # directory containing architecture specific source files (kernel/<ARCH_DIR>)
-ARCH_DIR = x86-64
+ARCH = x86-64
 # modules (sub-projects) contained in this project
 MODULES = kernel
 
@@ -27,6 +27,8 @@ CLEAN :=
 include $(patsubst %, %/module.mk, $(MODULES))
 
 CPPFLAGS += $(addprefix -I, $(INCLUDE_DIRS))
+# Subsitute dashes with underscores in the architecture name for preprocessor defines
+CPPFLAGS += -DARCH_$(subst -,_,$(ARCH))
 
 CXXFLAGS += \
 	-std=c++20 \
@@ -39,7 +41,7 @@ CXXFLAGS += \
 	-fno-use-cxa-atexit \
 	-fno-exceptions \
 	-m64 \
-	-march=x86-64 \
+	-march=$(ARCH) \
 	-mabi=sysv \
 	-mno-80387 \
 	-mno-mmx \
@@ -55,9 +57,8 @@ LDFLAGS += $(addprefix -l, $(LIB_NAMES))
 LDFLAGS += \
 	-nostdlib \
 	-static \
-	-melf_x86_64 \
 	-z max-page-size=0x1000 \
-	-T kernel/arch/$(ARCH_DIR)/linker.ld \
+	-T kernel/arch/$(ARCH)/linker.ld \
 
 HEADER_DEPS = $(OBJS:.o=.d)
 

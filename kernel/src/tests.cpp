@@ -10,6 +10,7 @@
 #include <kernel/macros.h>
 #include <kernel/processor.hpp>
 #include <kernel/tests.h>
+#include <kernel/thread.hpp>
 #include <kernel/paging.h>
 
 namespace
@@ -120,34 +121,71 @@ void test_keyboard()
     uint8_t cmd = processor::inb(0x60);
 
     bool irq1_enabled = cmd & (1 << 0);         // Bit 0
-    bool irq12_enabled = cmd & (1 << 1);        // Bit 1
     bool kbd_clock_enabled = !(cmd & (1 << 4)); // Bit 4 (0 = enabled)
-    bool translation_enabled = cmd & (1 << 6);  // Bit 6
 
-    kpp::printf("Command Byte: 0x%x\n", cmd);
-    kpp::printf("  IRQ1 (keyboard):       %s (%s)\n", irq1_enabled ? "enabled" : "disabled", irq1_enabled ? "OK" : "EXPECTED ENABLED");
-    kpp::printf("  IRQ12 (mouse):         %s\n", irq12_enabled ? "enabled" : "disabled");
-    kpp::printf("  Keyboard clock:        %s (%s)\n", kbd_clock_enabled ? "enabled" : "disabled", kbd_clock_enabled ? "OK" : "EXPECTED ENABLED");
-    kpp::printf("  Scancode translation:  %s\n", translation_enabled ? "enabled" : "disabled");
+#ifdef DEBUG_BUILD
+    bool irq12_enabled = cmd & (1 << 1);        // Bit 1
+    bool translation_enabled = cmd & (1 << 6);  // Bit 6
+    DEBUG("Command Byte: 0x%x\n", cmd);
+    DEBUG("  IRQ1 (keyboard):       %s (%s)\n", irq1_enabled ? "enabled" : "disabled", irq1_enabled ? "OK" : "EXPECTED ENABLED");
+    DEBUG("  IRQ12 (mouse):         %s\n", irq12_enabled ? "enabled" : "disabled");
+    DEBUG("  Keyboard clock:        %s (%s)\n", kbd_clock_enabled ? "enabled" : "disabled", kbd_clock_enabled ? "OK" : "EXPECTED ENABLED");
+    DEBUG("  Scancode translation:  %s\n", translation_enabled ? "enabled" : "disabled");
+#endif
 
     if (irq1_enabled && kbd_clock_enabled)
         kpp::printf("keyboard controller test: PASSED\n");
     else
         kpp::printf("keyboard controller test: FAILED\n");
 
+#ifdef DEBUG_BUILD
     // --- Local APIC State Check ---
+    DEBUG("Local APIC State:\n");
     uint32_t tpr = processor::localAPIC.read(0x80);
-    kpp::printf("TPR: 0x%x (%s)\n", tpr, tpr == 0 ? "OK" : "EXPECTED 0");
+    DEBUG("TPR: 0x%x (%s)\n", tpr, tpr == 0 ? "OK" : "EXPECTED 0");
 
     int flags;
     asm volatile("pushf; pop %%rax; and $0x200, %%rax" : "=a"(flags));
-    kpp::printf("IF enabled: %s (%s)\n", flags ? "yes" : "no", flags ? "OK" : "EXPECTED yes");
+    DEBUG("IF enabled: %s (%s)\n", flags ? "yes" : "no", flags ? "OK" : "EXPECTED yes");
 
     uint32_t svr = processor::localAPIC.read(0xF0);
     bool apic_enabled = svr & (1 << 8);
-    kpp::printf("SVR: 0x%x\n", svr);
-    kpp::printf("  APIC enabled bit: %s (%s)\n", apic_enabled ? "yes" : "no", apic_enabled ? "OK" : "EXPECTED yes");
+    DEBUG("SVR: 0x%x\n", svr);
+    DEBUG("  APIC enabled bit: %s (%s)\n", apic_enabled ? "yes" : "no", apic_enabled ? "OK" : "EXPECTED yes");
+#endif
+}
 
+void test_cooperative_threading()
+{
+    kpp::printf("running cooperative threading test...\n");
+    int flag = 0;
+    struct Argument {
+        int *flagAddress;
+        thread::ThreadId previous_thread;
+    };
+    Argument arg = {&flag, thread::get_current_thread_id()};
+    thread::ThreadId newThread = thread::create_thread([](void *arg) {
+        auto *a = reinterpret_cast<Argument *>(arg);
+        *(a->flagAddress) = 0x1234;
+        thread::switch_to(a->previous_thread);
+    }, &arg);
+
+    if (newThread < 0) {
+        kpp::printf("could not create new thread\n");
+        goto fail;
+    }
+
+    thread::switch_to(newThread);
+    if (flag == 0x1234) {
+        kpp::printf("cooperative threading test passed!\n");
+    } else {
+        kpp::printf("flag was not modified in another thread\n");
+        goto fail;
+    }
+    return;
+
+fail:
+    kpp::printf("cooperative threading test: failed!\n");
 }
 
 // TODO: Make this into a real suite that errors out on failure
@@ -164,6 +202,7 @@ void run_all_tests()
     test_allocator<FreeListAllocator<char>>();
     test_interprocessor_interrupts();
     test_keyboard();
+    test_cooperative_threading();
     kpp::printf("\nPASSED ALL TESTS\n");
     kpp::printf("=========================\n\n");
 }

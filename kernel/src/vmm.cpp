@@ -3,6 +3,7 @@
 #include <kernel/frame_allocator.h>
 #include <kernel/FreeListAllocator.h>
 #include <kernel/kernel.h>
+#include <kernel/limine_features.h>
 #include <kernel/macros.h>
 #include <kernel/paging.h>
 #include <kernel/vmm.h>
@@ -14,7 +15,8 @@ static auto allocator = Allocator<virtual_allocator_type> {};
 
 auto vmm_init() -> void {
     for (const auto &[base, size] : paging_get_initial_free_regions()) {
-        if (size == 0) {
+        // don't allocate regions below the higher-half addresses
+        if (size == 0 || base < limine::hhdm_address->offset) {
             continue;
         }
         allocator.add_memory(reinterpret_cast<allocated_type *>(base), size);
